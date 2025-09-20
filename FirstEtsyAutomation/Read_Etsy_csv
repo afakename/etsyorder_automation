@@ -1,0 +1,11 @@
+import pandas as pd
+
+# Update with your file path
+csv_file = r"C:\1.Automations\EtsyOrderItems\EtsySoldOrderItems2024-12.csv"
+
+# Load the CSV
+df = pd.read_csv(csv_file)
+
+# Show column names and first few rows
+print(df.columns)
+print(df.head())
