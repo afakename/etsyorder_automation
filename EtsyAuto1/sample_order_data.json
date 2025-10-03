@@ -1,0 +1,791 @@
+[
+  {
+    "receipt_id": 3796291959,
+    "receipt_type": 0,
+    "seller_user_id": 211518821,
+    "seller_email": "hoveydesignshop@gmail.com",
+    "buyer_user_id": 70096917,
+    "buyer_email": null,
+    "name": "Nancy Rankin",
+    "first_line": null,
+    "second_line": null,
+    "city": null,
+    "state": null,
+    "zip": null,
+    "status": "Paid",
+    "formatted_address": null,
+    "country_iso": null,
+    "payment_method": "cc",
+    "payment_email": null,
+    "message_from_payment": null,
+    "message_from_seller": "Thank you for supporting us, and for letting us support you!",
+    "message_from_buyer": null,
+    "is_shipped": false,
+    "is_paid": true,
+    "create_timestamp": 1757468252,
+    "created_timestamp": 1757468252,
+    "update_timestamp": 1757468261,
+    "updated_timestamp": 1757468261,
+    "is_gift": false,
+    "gift_message": "",
+    "gift_sender": "",
+    "grandtotal": {
+      "amount": 7946,
+      "divisor": 100,
+      "currency_code": "USD"
+    },
+    "subtotal": {
+      "amount": 7496,
+      "divisor": 100,
+      "currency_code": "USD"
+    },
+    "total_price": {
+      "amount": 9996,
+      "divisor": 100,
+      "currency_code": "USD"
+    },
+    "total_shipping_cost": {
+      "amount": 0,
+      "divisor": 100,
+      "currency_code": "USD"
+    },
+    "total_tax_cost": {
+      "amount": 450,
+      "divisor": 100,
+      "currency_code": "USD"
+    },
+    "total_vat_cost": {
+      "amount": 0,
+      "divisor": 100,
+      "currency_code": "USD"
+    },
+    "discount_amt": {
+      "amount": 2500,
+      "divisor": 100,
+      "currency_code": "USD"
+    },
+    "gift_wrap_price": {
+      "amount": 0,
+      "divisor": 100,
+      "currency_code": "USD"
+    },
+    "shipments": [],
+    "transactions": [
+      {
+        "transaction_id": 4737015691,
+        "title": "Custom Name Snowflake Ornament (MS-1) personalized Christmas ornament snowflake grandkid names grandparents family name keepsake 2024 gift",
+        "description": "Discover Exquisite Personalized Snowflake Ornaments\n\nElevate your holiday decor with our stunning personalized snowflake ornaments. Each ornament is a masterpiece, carefully crafted to be as unique as real snowflakes and as special as the names they bear. We take pride in the artistry of our hand-designed snowflakes, ensuring that no two are alike.\n\nThis product will include the same font type for each design. You can choose from two different center pieces and whether you would like to add the year as well.  If you would like a more stylized design please refer to one of my other listings and i will be happy to make something special for you and your family.\n\nThe images in each listing are designed to be examples of what could possibly be created but are not a guarantee that style can be replicated. I will also share mock ups of designs after an order has been place and prior to completion upon request, just add a note to your order to request a preview. \n\nKey Features:\n\nIndividualized Artistry: Every snowflake is meticulously crafted to order, with its design inspired by the name you choose. This level of personalization ensures that each ornament is one-of-a-kind.\n\nQuality Materials: Our snowflakes are made from 3D printed PLA plastic, known for its durability and ability to capture intricate details. They should be kept away from any heat source to ensure your ornament will stand the test of time.  \n\nSubtle Sparkle: To add a touch of enchantment, each snowflake is delicately coated with a hint of glitter, creating a dazzling effect when it catches the light.\n\nTailored for You: We take pride in offering made-to-order ornaments, ensuring that each piece is a bespoke creation that you will enjoy. \n\nCustom Requests: Have a unique idea in mind? We welcome special requests and encourage you to connect with us directly. We&#39;re here to bring your one-of-a-kind vision to life. \n\nPersonalization with a Name: Our snowflakes are designed to feature one name, whether it&#39;s a beloved family member, your child, or a cherished pet. This personal touch makes our ornaments meaningful keepsakes for years to come.\n\nCenterpiece Year: In addition to our standard year options, we&#39;re delighted to accommodate requests for a different year or different center piece design for your snowflake. This is the perfect way to commemorate a special year or occasion.\n\nCreate lasting memories and celebrate your loved ones with our personalized snowflake ornaments. Feel free to reach out to us with any questions; we&#39;re dedicated to collaborating with you to design something extraordinary.\n\nElevate your holiday decor with these remarkable ornaments. Order now and cherish the magic of the season!\n\n\nCopyright Notice:\nAll designs, images, and content in this shop are the exclusive property of Hovey Designs and are protected under copyright law. Unauthorized reproduction, copying, or use of any part of this content is strictly prohibited and may result in legal action. Please respect the creative work by not duplicating, distributing, or selling any items or designs without permission. Thank you for supporting original artwork!",
+        "seller_user_id": 211518821,
+        "buyer_user_id": 70096917,
+        "create_timestamp": 1757468252,
+        "created_timestamp": 1757468252,
+        "paid_timestamp": 1757468259,
+        "shipped_timestamp": null,
+        "quantity": 1,
+        "listing_image_id": 6453467335,
+        "receipt_id": 3796291959,
+        "is_digital": false,
+        "file_data": "",
+        "listing_id": 1561887703,
+        "sku": "",
+        "product_id": 23199377436,
+        "transaction_type": "listing",
+        "price": {
+          "amount": 2499,
+          "divisor": 100,
+          "currency_code": "USD"
+        },
+        "shipping_cost": {
+          "amount": 0,
+          "divisor": 100,
+          "currency_code": "USD"
+        },
+        "variations": [
+          {
+            "property_id": 514,
+            "value_id": 216160662615,
+            "formatted_name": "Choose the Center Piece",
+            "formatted_value": "Star Design"
+          },
+          {
+            "property_id": 513,
+            "value_id": 104437759992,
+            "formatted_name": "Year or No Year",
+            "formatted_value": "No Year"
+          },
+          {
+            "property_id": 54,
+            "value_id": null,
+            "formatted_name": "Personalization",
+            "formatted_value": "Blake"
+          }
+        ],
+        "product_data": [
+          {
+            "property_id": 514,
+            "property_name": "Custom Property",
+            "scale_id": null,
+            "scale_name": null,
+            "value_ids": [
+              216160662615
+            ],
+            "values": [
+              "Star Design"
+            ]
+          },
+          {
+            "property_id": 513,
+            "property_name": "Custom Property",
+            "scale_id": null,
+            "scale_name": null,
+            "value_ids": [
+              104437759992
+            ],
+            "values": [
+              "No Year"
+            ]
+          }
+        ],
+        "shipping_profile_id": 214442899134,
+        "min_processing_days": 14,
+        "max_processing_days": 21,
+        "shipping_method": null,
+        "shipping_upgrade": "USPS First-Class Mail",
+        "expected_ship_date": 1759291140,
+        "buyer_coupon": 6.25,
+        "shop_coupon": 6.25
+      },
+      {
+        "transaction_id": 4737015689,
+        "title": "Custom Name Snowflake Ornament (MS-1) personalized Christmas ornament snowflake grandkid names grandparents family name keepsake 2024 gift",
+        "description": "Discover Exquisite Personalized Snowflake Ornaments\n\nElevate your holiday decor with our stunning personalized snowflake ornaments. Each ornament is a masterpiece, carefully crafted to be as unique as real snowflakes and as special as the names they bear. We take pride in the artistry of our hand-designed snowflakes, ensuring that no two are alike.\n\nThis product will include the same font type for each design. You can choose from two different center pieces and whether you would like to add the year as well.  If you would like a more stylized design please refer to one of my other listings and i will be happy to make something special for you and your family.\n\nThe images in each listing are designed to be examples of what could possibly be created but are not a guarantee that style can be replicated. I will also share mock ups of designs after an order has been place and prior to completion upon request, just add a note to your order to request a preview. \n\nKey Features:\n\nIndividualized Artistry: Every snowflake is meticulously crafted to order, with its design inspired by the name you choose. This level of personalization ensures that each ornament is one-of-a-kind.\n\nQuality Materials: Our snowflakes are made from 3D printed PLA plastic, known for its durability and ability to capture intricate details. They should be kept away from any heat source to ensure your ornament will stand the test of time.  \n\nSubtle Sparkle: To add a touch of enchantment, each snowflake is delicately coated with a hint of glitter, creating a dazzling effect when it catches the light.\n\nTailored for You: We take pride in offering made-to-order ornaments, ensuring that each piece is a bespoke creation that you will enjoy. \n\nCustom Requests: Have a unique idea in mind? We welcome special requests and encourage you to connect with us directly. We&#39;re here to bring your one-of-a-kind vision to life. \n\nPersonalization with a Name: Our snowflakes are designed to feature one name, whether it&#39;s a beloved family member, your child, or a cherished pet. This personal touch makes our ornaments meaningful keepsakes for years to come.\n\nCenterpiece Year: In addition to our standard year options, we&#39;re delighted to accommodate requests for a different year or different center piece design for your snowflake. This is the perfect way to commemorate a special year or occasion.\n\nCreate lasting memories and celebrate your loved ones with our personalized snowflake ornaments. Feel free to reach out to us with any questions; we&#39;re dedicated to collaborating with you to design something extraordinary.\n\nElevate your holiday decor with these remarkable ornaments. Order now and cherish the magic of the season!\n\n\nCopyright Notice:\nAll designs, images, and content in this shop are the exclusive property of Hovey Designs and are protected under copyright law. Unauthorized reproduction, copying, or use of any part of this content is strictly prohibited and may result in legal action. Please respect the creative work by not duplicating, distributing, or selling any items or designs without permission. Thank you for supporting original artwork!",
+        "seller_user_id": 211518821,
+        "buyer_user_id": 70096917,
+        "create_timestamp": 1757468252,
+        "created_timestamp": 1757468252,
+        "paid_timestamp": 1757468259,
+        "shipped_timestamp": null,
+        "quantity": 1,
+        "listing_image_id": 6453467335,
+        "receipt_id": 3796291959,
+        "is_digital": false,
+        "file_data": "",
+        "listing_id": 1561887703,
+        "sku": "",
+        "product_id": 23199377436,
+        "transaction_type": "listing",
+        "price": {
+          "amount": 2499,
+          "divisor": 100,
+          "currency_code": "USD"
+        },
+        "shipping_cost": {
+          "amount": 0,
+          "divisor": 100,
+          "currency_code": "USD"
+        },
+        "variations": [
+          {
+            "property_id": 514,
+            "value_id": 216160662615,
+            "formatted_name": "Choose the Center Piece",
+            "formatted_value": "Star Design"
+          },
+          {
+            "property_id": 513,
+            "value_id": 104437759992,
+            "formatted_name": "Year or No Year",
+            "formatted_value": "No Year"
+          },
+          {
+            "property_id": 54,
+            "value_id": null,
+            "formatted_name": "Personalization",
+            "formatted_value": "Katlyn"
+          }
+        ],
+        "product_data": [
+          {
+            "property_id": 514,
+            "property_name": "Custom Property",
+            "scale_id": null,
+            "scale_name": null,
+            "value_ids": [
+              216160662615
+            ],
+            "values": [
+              "Star Design"
+            ]
+          },
+          {
+            "property_id": 513,
+            "property_name": "Custom Property",
+            "scale_id": null,
+            "scale_name": null,
+            "value_ids": [
+              104437759992
+            ],
+            "values": [
+              "No Year"
+            ]
+          }
+        ],
+        "shipping_profile_id": 214442899134,
+        "min_processing_days": 14,
+        "max_processing_days": 21,
+        "shipping_method": null,
+        "shipping_upgrade": "USPS First-Class Mail",
+        "expected_ship_date": 1759291140,
+        "buyer_coupon": 6.25,
+        "shop_coupon": 6.25
+      },
+      {
+        "transaction_id": 4726115324,
+        "title": "Custom Name Snowflake Ornament (MS) personalized Christmas ornament snowflake grandkid names grandparent gift family name keepsake 2024 gift",
+        "description": "Discover Exquisite Personalized Snowflake Ornaments\n\nElevate your holiday decor with our stunning personalized snowflake ornaments. Each ornament is a masterpiece, carefully crafted to be as unique as real snowflakes and as special as the names they bear. We take pride in the artistry of our hand-designed snowflakes, ensuring that no two are alike.\n\nThis product will include the same font type for each design. You can choose from two different center pieces and whether you would like to add the year as well.  If you would like a more stylized design please refer to one of my other listings and i will be happy to make something special for you and your family.\n\nThe images in each listing are designed to be examples of what could possibly be created but are not a guarantee that style can be replicated. I will also share mock ups of designs after an order has been place and prior to completion upon request, just add a note to your order to request a preview. \n\nKey Features:\n\nIndividualized Artistry: Every snowflake is meticulously crafted to order, with its design inspired by the name you choose. This level of personalization ensures that each ornament is one-of-a-kind.\n\nQuality Materials: Our snowflakes are made from 3D printed PLA plastic, known for its durability and ability to capture intricate details. They should be kept away from any heat source to ensure your ornament will stand the test of time.  \n\nSubtle Sparkle: To add a touch of enchantment, each snowflake is delicately coated with a hint of glitter, creating a dazzling effect when it catches the light.\n\nTailored for You: We take pride in offering made-to-order ornaments, ensuring that each piece is a bespoke creation that you will enjoy. \n\nCustom Requests: Have a unique idea in mind? We welcome special requests and encourage you to connect with us directly. We&#39;re here to bring your one-of-a-kind vision to life. \n\nPersonalization with a Name: Our snowflakes are designed to feature one name, whether it&#39;s a beloved family member, your child, or a cherished pet. This personal touch makes our ornaments meaningful keepsakes for years to come.\n\nCenterpiece Year: In addition to our standard year options, we&#39;re delighted to accommodate requests for a different year or different center piece design for your snowflake. This is the perfect way to commemorate a special year or occasion.\n\nCreate lasting memories and celebrate your loved ones with our personalized snowflake ornaments. Feel free to reach out to us with any questions; we&#39;re dedicated to collaborating with you to design something extraordinary.\n\nElevate your holiday decor with these remarkable ornaments. Order now and cherish the magic of the season!\n\nLike and follow my social media pages for updates and to  see images and videos of my creative process!\n\nCopyright Notice:\nAll designs, images, and content in this shop are the exclusive property of Hovey Designs and are protected under copyright law. Unauthorized reproduction, copying, or use of any part of this content is strictly prohibited and may result in legal action. Please respect the creative work by not duplicating, distributing, or selling any items or designs without permission. Thank you for supporting original artwork!",
+        "seller_user_id": 211518821,
+        "buyer_user_id": 70096917,
+        "create_timestamp": 1757468252,
+        "created_timestamp": 1757468252,
+        "paid_timestamp": 1757468259,
+        "shipped_timestamp": null,
+        "quantity": 1,
+        "listing_image_id": 6451356433,
+        "receipt_id": 3796291959,
+        "is_digital": false,
+        "file_data": "",
+        "listing_id": 1806385686,
+        "sku": "",
+        "product_id": 22712529673,
+        "transaction_type": "listing",
+        "price": {
+          "amount": 2499,
+          "divisor": 100,
+          "currency_code": "USD"
+        },
+        "shipping_cost": {
+          "amount": 0,
+          "divisor": 100,
+          "currency_code": "USD"
+        },
+        "variations": [
+          {
+            "property_id": 514,
+            "value_id": 216160662615,
+            "formatted_name": "Choose the Center Piece",
+            "formatted_value": "Star Design"
+          },
+          {
+            "property_id": 513,
+            "value_id": 104437759992,
+            "formatted_name": "Year or No Year",
+            "formatted_value": "No Year"
+          },
+          {
+            "property_id": 54,
+            "value_id": null,
+            "formatted_name": "Personalization",
+            "formatted_value": "Brent"
+          }
+        ],
+        "product_data": [
+          {
+            "property_id": 514,
+            "property_name": "Custom Property",
+            "scale_id": null,
+            "scale_name": null,
+            "value_ids": [
+              216160662615
+            ],
+            "values": [
+              "Star Design"
+            ]
+          },
+          {
+            "property_id": 513,
+            "property_name": "Custom Property",
+            "scale_id": null,
+            "scale_name": null,
+            "value_ids": [
+              104437759992
+            ],
+            "values": [
+              "No Year"
+            ]
+          }
+        ],
+        "shipping_profile_id": 213162253059,
+        "min_processing_days": 14,
+        "max_processing_days": 21,
+        "shipping_method": null,
+        "shipping_upgrade": "USPS First-Class Mail",
+        "expected_ship_date": 1759291140,
+        "buyer_coupon": 6.25,
+        "shop_coupon": 6.25
+      },
+      {
+        "transaction_id": 4726115322,
+        "title": "Custom Name Snowflake Ornament (MS-1) personalized Christmas ornament snowflake grandkid names grandparents family name keepsake 2024 gift",
+        "description": "Discover Exquisite Personalized Snowflake Ornaments\n\nElevate your holiday decor with our stunning personalized snowflake ornaments. Each ornament is a masterpiece, carefully crafted to be as unique as real snowflakes and as special as the names they bear. We take pride in the artistry of our hand-designed snowflakes, ensuring that no two are alike.\n\nThis product will include the same font type for each design. You can choose from two different center pieces and whether you would like to add the year as well.  If you would like a more stylized design please refer to one of my other listings and i will be happy to make something special for you and your family.\n\nThe images in each listing are designed to be examples of what could possibly be created but are not a guarantee that style can be replicated. I will also share mock ups of designs after an order has been place and prior to completion upon request, just add a note to your order to request a preview. \n\nKey Features:\n\nIndividualized Artistry: Every snowflake is meticulously crafted to order, with its design inspired by the name you choose. This level of personalization ensures that each ornament is one-of-a-kind.\n\nQuality Materials: Our snowflakes are made from 3D printed PLA plastic, known for its durability and ability to capture intricate details. They should be kept away from any heat source to ensure your ornament will stand the test of time.  \n\nSubtle Sparkle: To add a touch of enchantment, each snowflake is delicately coated with a hint of glitter, creating a dazzling effect when it catches the light.\n\nTailored for You: We take pride in offering made-to-order ornaments, ensuring that each piece is a bespoke creation that you will enjoy. \n\nCustom Requests: Have a unique idea in mind? We welcome special requests and encourage you to connect with us directly. We&#39;re here to bring your one-of-a-kind vision to life. \n\nPersonalization with a Name: Our snowflakes are designed to feature one name, whether it&#39;s a beloved family member, your child, or a cherished pet. This personal touch makes our ornaments meaningful keepsakes for years to come.\n\nCenterpiece Year: In addition to our standard year options, we&#39;re delighted to accommodate requests for a different year or different center piece design for your snowflake. This is the perfect way to commemorate a special year or occasion.\n\nCreate lasting memories and celebrate your loved ones with our personalized snowflake ornaments. Feel free to reach out to us with any questions; we&#39;re dedicated to collaborating with you to design something extraordinary.\n\nElevate your holiday decor with these remarkable ornaments. Order now and cherish the magic of the season!\n\n\nCopyright Notice:\nAll designs, images, and content in this shop are the exclusive property of Hovey Designs and are protected under copyright law. Unauthorized reproduction, copying, or use of any part of this content is strictly prohibited and may result in legal action. Please respect the creative work by not duplicating, distributing, or selling any items or designs without permission. Thank you for supporting original artwork!",
+        "seller_user_id": 211518821,
+        "buyer_user_id": 70096917,
+        "create_timestamp": 1757468252,
+        "created_timestamp": 1757468252,
+        "paid_timestamp": 1757468259,
+        "shipped_timestamp": null,
+        "quantity": 1,
+        "listing_image_id": 6453467335,
+        "receipt_id": 3796291959,
+        "is_digital": false,
+        "file_data": "",
+        "listing_id": 1561887703,
+        "sku": "",
+        "product_id": 23199377436,
+        "transaction_type": "listing",
+        "price": {
+          "amount": 2499,
+          "divisor": 100,
+          "currency_code": "USD"
+        },
+        "shipping_cost": {
+          "amount": 0,
+          "divisor": 100,
+          "currency_code": "USD"
+        },
+        "variations": [
+          {
+            "property_id": 514,
+            "value_id": 216160662615,
+            "formatted_name": "Choose the Center Piece",
+            "formatted_value": "Star Design"
+          },
+          {
+            "property_id": 513,
+            "value_id": 104437759992,
+            "formatted_name": "Year or No Year",
+            "formatted_value": "No Year"
+          },
+          {
+            "property_id": 54,
+            "value_id": null,
+            "formatted_name": "Personalization",
+            "formatted_value": "Caleb"
+          }
+        ],
+        "product_data": [
+          {
+            "property_id": 514,
+            "property_name": "Custom Property",
+            "scale_id": null,
+            "scale_name": null,
+            "value_ids": [
+              216160662615
+            ],
+            "values": [
+              "Star Design"
+            ]
+          },
+          {
+            "property_id": 513,
+            "property_name": "Custom Property",
+            "scale_id": null,
+            "scale_name": null,
+            "value_ids": [
+              104437759992
+            ],
+            "values": [
+              "No Year"
+            ]
+          }
+        ],
+        "shipping_profile_id": 214442899134,
+        "min_processing_days": 14,
+        "max_processing_days": 21,
+        "shipping_method": null,
+        "shipping_upgrade": "USPS First-Class Mail",
+        "expected_ship_date": 1759291140,
+        "buyer_coupon": 6.25,
+        "shop_coupon": 6.25
+      }
+    ],
+    "refunds": []
+  },
+  {
+    "receipt_id": 3792562532,
+    "receipt_type": 0,
+    "seller_user_id": 211518821,
+    "seller_email": "hoveydesignshop@gmail.com",
+    "buyer_user_id": 1132683905,
+    "buyer_email": null,
+    "name": "Amber Neilson",
+    "first_line": null,
+    "second_line": null,
+    "city": null,
+    "state": null,
+    "zip": null,
+    "status": "Paid",
+    "formatted_address": null,
+    "country_iso": null,
+    "payment_method": "cc",
+    "payment_email": null,
+    "message_from_payment": null,
+    "message_from_seller": "Thank you for supporting us, and for letting us support you!",
+    "message_from_buyer": null,
+    "is_shipped": false,
+    "is_paid": true,
+    "create_timestamp": 1757464107,
+    "created_timestamp": 1757464107,
+    "update_timestamp": 1757464115,
+    "updated_timestamp": 1757464115,
+    "is_gift": false,
+    "gift_message": "",
+    "gift_sender": "",
+    "grandtotal": {
+      "amount": 4005,
+      "divisor": 100,
+      "currency_code": "USD"
+    },
+    "subtotal": {
+      "amount": 3748,
+      "divisor": 100,
+      "currency_code": "USD"
+    },
+    "total_price": {
+      "amount": 4998,
+      "divisor": 100,
+      "currency_code": "USD"
+    },
+    "total_shipping_cost": {
+      "amount": 0,
+      "divisor": 100,
+      "currency_code": "USD"
+    },
+    "total_tax_cost": {
+      "amount": 257,
+      "divisor": 100,
+      "currency_code": "USD"
+    },
+    "total_vat_cost": {
+      "amount": 0,
+      "divisor": 100,
+      "currency_code": "USD"
+    },
+    "discount_amt": {
+      "amount": 1250,
+      "divisor": 100,
+      "currency_code": "USD"
+    },
+    "gift_wrap_price": {
+      "amount": 0,
+      "divisor": 100,
+      "currency_code": "USD"
+    },
+    "shipments": [],
+    "transactions": [
+      {
+        "transaction_id": 4736945813,
+        "title": "Custom Name Snowflake Ornament (MS-1) personalized Christmas ornament snowflake grandkid names grandparents family name keepsake 2024 gift",
+        "description": "Discover Exquisite Personalized Snowflake Ornaments\n\nElevate your holiday decor with our stunning personalized snowflake ornaments. Each ornament is a masterpiece, carefully crafted to be as unique as real snowflakes and as special as the names they bear. We take pride in the artistry of our hand-designed snowflakes, ensuring that no two are alike.\n\nThis product will include the same font type for each design. You can choose from two different center pieces and whether you would like to add the year as well.  If you would like a more stylized design please refer to one of my other listings and i will be happy to make something special for you and your family.\n\nThe images in each listing are designed to be examples of what could possibly be created but are not a guarantee that style can be replicated. I will also share mock ups of designs after an order has been place and prior to completion upon request, just add a note to your order to request a preview. \n\nKey Features:\n\nIndividualized Artistry: Every snowflake is meticulously crafted to order, with its design inspired by the name you choose. This level of personalization ensures that each ornament is one-of-a-kind.\n\nQuality Materials: Our snowflakes are made from 3D printed PLA plastic, known for its durability and ability to capture intricate details. They should be kept away from any heat source to ensure your ornament will stand the test of time.  \n\nSubtle Sparkle: To add a touch of enchantment, each snowflake is delicately coated with a hint of glitter, creating a dazzling effect when it catches the light.\n\nTailored for You: We take pride in offering made-to-order ornaments, ensuring that each piece is a bespoke creation that you will enjoy. \n\nCustom Requests: Have a unique idea in mind? We welcome special requests and encourage you to connect with us directly. We&#39;re here to bring your one-of-a-kind vision to life. \n\nPersonalization with a Name: Our snowflakes are designed to feature one name, whether it&#39;s a beloved family member, your child, or a cherished pet. This personal touch makes our ornaments meaningful keepsakes for years to come.\n\nCenterpiece Year: In addition to our standard year options, we&#39;re delighted to accommodate requests for a different year or different center piece design for your snowflake. This is the perfect way to commemorate a special year or occasion.\n\nCreate lasting memories and celebrate your loved ones with our personalized snowflake ornaments. Feel free to reach out to us with any questions; we&#39;re dedicated to collaborating with you to design something extraordinary.\n\nElevate your holiday decor with these remarkable ornaments. Order now and cherish the magic of the season!\n\n\nCopyright Notice:\nAll designs, images, and content in this shop are the exclusive property of Hovey Designs and are protected under copyright law. Unauthorized reproduction, copying, or use of any part of this content is strictly prohibited and may result in legal action. Please respect the creative work by not duplicating, distributing, or selling any items or designs without permission. Thank you for supporting original artwork!",
+        "seller_user_id": 211518821,
+        "buyer_user_id": 1132683905,
+        "create_timestamp": 1757464107,
+        "created_timestamp": 1757464107,
+        "paid_timestamp": 1757464114,
+        "shipped_timestamp": null,
+        "quantity": 1,
+        "listing_image_id": 6405368752,
+        "receipt_id": 3792562532,
+        "is_digital": false,
+        "file_data": "",
+        "listing_id": 1561887703,
+        "sku": "",
+        "product_id": 22722951797,
+        "transaction_type": "listing",
+        "price": {
+          "amount": 2499,
+          "divisor": 100,
+          "currency_code": "USD"
+        },
+        "shipping_cost": {
+          "amount": 0,
+          "divisor": 100,
+          "currency_code": "USD"
+        },
+        "variations": [
+          {
+            "property_id": 514,
+            "value_id": 1321137850442,
+            "formatted_name": "Choose the Center Piece",
+            "formatted_value": "Flake Design"
+          },
+          {
+            "property_id": 513,
+            "value_id": 104437759992,
+            "formatted_name": "Year or No Year",
+            "formatted_value": "No Year"
+          },
+          {
+            "property_id": 54,
+            "value_id": null,
+            "formatted_name": "Personalization",
+            "formatted_value": "Trenton"
+          }
+        ],
+        "product_data": [
+          {
+            "property_id": 514,
+            "property_name": "Custom Property",
+            "scale_id": null,
+            "scale_name": null,
+            "value_ids": [
+              1321137850442
+            ],
+            "values": [
+              "Flake Design"
+            ]
+          },
+          {
+            "property_id": 513,
+            "property_name": "Custom Property",
+            "scale_id": null,
+            "scale_name": null,
+            "value_ids": [
+              104437759992
+            ],
+            "values": [
+              "No Year"
+            ]
+          }
+        ],
+        "shipping_profile_id": 214442899134,
+        "min_processing_days": 14,
+        "max_processing_days": 21,
+        "shipping_method": null,
+        "shipping_upgrade": "USPS First-Class Mail",
+        "expected_ship_date": 1759291140,
+        "buyer_coupon": 6.25,
+        "shop_coupon": 6.25
+      },
+      {
+        "transaction_id": 4726044978,
+        "title": "Custom Name Snowflake Ornament (MS-1) personalized Christmas ornament snowflake grandkid names grandparents family name keepsake 2024 gift",
+        "description": "Discover Exquisite Personalized Snowflake Ornaments\n\nElevate your holiday decor with our stunning personalized snowflake ornaments. Each ornament is a masterpiece, carefully crafted to be as unique as real snowflakes and as special as the names they bear. We take pride in the artistry of our hand-designed snowflakes, ensuring that no two are alike.\n\nThis product will include the same font type for each design. You can choose from two different center pieces and whether you would like to add the year as well.  If you would like a more stylized design please refer to one of my other listings and i will be happy to make something special for you and your family.\n\nThe images in each listing are designed to be examples of what could possibly be created but are not a guarantee that style can be replicated. I will also share mock ups of designs after an order has been place and prior to completion upon request, just add a note to your order to request a preview. \n\nKey Features:\n\nIndividualized Artistry: Every snowflake is meticulously crafted to order, with its design inspired by the name you choose. This level of personalization ensures that each ornament is one-of-a-kind.\n\nQuality Materials: Our snowflakes are made from 3D printed PLA plastic, known for its durability and ability to capture intricate details. They should be kept away from any heat source to ensure your ornament will stand the test of time.  \n\nSubtle Sparkle: To add a touch of enchantment, each snowflake is delicately coated with a hint of glitter, creating a dazzling effect when it catches the light.\n\nTailored for You: We take pride in offering made-to-order ornaments, ensuring that each piece is a bespoke creation that you will enjoy. \n\nCustom Requests: Have a unique idea in mind? We welcome special requests and encourage you to connect with us directly. We&#39;re here to bring your one-of-a-kind vision to life. \n\nPersonalization with a Name: Our snowflakes are designed to feature one name, whether it&#39;s a beloved family member, your child, or a cherished pet. This personal touch makes our ornaments meaningful keepsakes for years to come.\n\nCenterpiece Year: In addition to our standard year options, we&#39;re delighted to accommodate requests for a different year or different center piece design for your snowflake. This is the perfect way to commemorate a special year or occasion.\n\nCreate lasting memories and celebrate your loved ones with our personalized snowflake ornaments. Feel free to reach out to us with any questions; we&#39;re dedicated to collaborating with you to design something extraordinary.\n\nElevate your holiday decor with these remarkable ornaments. Order now and cherish the magic of the season!\n\n\nCopyright Notice:\nAll designs, images, and content in this shop are the exclusive property of Hovey Designs and are protected under copyright law. Unauthorized reproduction, copying, or use of any part of this content is strictly prohibited and may result in legal action. Please respect the creative work by not duplicating, distributing, or selling any items or designs without permission. Thank you for supporting original artwork!",
+        "seller_user_id": 211518821,
+        "buyer_user_id": 1132683905,
+        "create_timestamp": 1757464107,
+        "created_timestamp": 1757464107,
+        "paid_timestamp": 1757464114,
+        "shipped_timestamp": null,
+        "quantity": 1,
+        "listing_image_id": 6453467335,
+        "receipt_id": 3792562532,
+        "is_digital": false,
+        "file_data": "",
+        "listing_id": 1561887703,
+        "sku": "",
+        "product_id": 23199377436,
+        "transaction_type": "listing",
+        "price": {
+          "amount": 2499,
+          "divisor": 100,
+          "currency_code": "USD"
+        },
+        "shipping_cost": {
+          "amount": 0,
+          "divisor": 100,
+          "currency_code": "USD"
+        },
+        "variations": [
+          {
+            "property_id": 514,
+            "value_id": 216160662615,
+            "formatted_name": "Choose the Center Piece",
+            "formatted_value": "Star Design"
+          },
+          {
+            "property_id": 513,
+            "value_id": 104437759992,
+            "formatted_name": "Year or No Year",
+            "formatted_value": "No Year"
+          },
+          {
+            "property_id": 54,
+            "value_id": null,
+            "formatted_name": "Personalization",
+            "formatted_value": "Logan"
+          }
+        ],
+        "product_data": [
+          {
+            "property_id": 514,
+            "property_name": "Custom Property",
+            "scale_id": null,
+            "scale_name": null,
+            "value_ids": [
+              216160662615
+            ],
+            "values": [
+              "Star Design"
+            ]
+          },
+          {
+            "property_id": 513,
+            "property_name": "Custom Property",
+            "scale_id": null,
+            "scale_name": null,
+            "value_ids": [
+              104437759992
+            ],
+            "values": [
+              "No Year"
+            ]
+          }
+        ],
+        "shipping_profile_id": 214442899134,
+        "min_processing_days": 14,
+        "max_processing_days": 21,
+        "shipping_method": null,
+        "shipping_upgrade": "USPS First-Class Mail",
+        "expected_ship_date": 1759291140,
+        "buyer_coupon": 6.25,
+        "shop_coupon": 6.25
+      }
+    ],
+    "refunds": []
+  },
+  {
+    "receipt_id": 3795852673,
+    "receipt_type": 0,
+    "seller_user_id": 211518821,
+    "seller_email": "hoveydesignshop@gmail.com",
+    "buyer_user_id": 111335328,
+    "buyer_email": null,
+    "name": "Kimberly A Houck",
+    "first_line": null,
+    "second_line": null,
+    "city": null,
+    "state": null,
+    "zip": null,
+    "status": "Paid",
+    "formatted_address": null,
+    "country_iso": null,
+    "payment_method": "cc",
+    "payment_email": null,
+    "message_from_payment": null,
+    "message_from_seller": "Thank you for supporting us, and for letting us support you!",
+    "message_from_buyer": "",
+    "is_shipped": false,
+    "is_paid": true,
+    "create_timestamp": 1757439840,
+    "created_timestamp": 1757439840,
+    "update_timestamp": 1757439848,
+    "updated_timestamp": 1757439848,
+    "is_gift": false,
+    "gift_message": "",
+    "gift_sender": "",
+    "grandtotal": {
+      "amount": 3004,
+      "divisor": 100,
+      "currency_code": "USD"
+    },
+    "subtotal": {
+      "amount": 2399,
+      "divisor": 100,
+      "currency_code": "USD"
+    },
+    "total_price": {
+      "amount": 3199,
+      "divisor": 100,
+      "currency_code": "USD"
+    },
+    "total_shipping_cost": {
+      "amount": 435,
+      "divisor": 100,
+      "currency_code": "USD"
+    },
+    "total_tax_cost": {
+      "amount": 170,
+      "divisor": 100,
+      "currency_code": "USD"
+    },
+    "total_vat_cost": {
+      "amount": 0,
+      "divisor": 100,
+      "currency_code": "USD"
+    },
+    "discount_amt": {
+      "amount": 800,
+      "divisor": 100,
+      "currency_code": "USD"
+    },
+    "gift_wrap_price": {
+      "amount": 0,
+      "divisor": 100,
+      "currency_code": "USD"
+    },
+    "shipments": [],
+    "transactions": [
+      {
+        "transaction_id": 4736460959,
+        "title": "Fuck Flake Snowflake Ornament, Christmas ornament, box set Xmas custom winter holiday decor, Christmas gift present, festive home decoration",
+        "description": "Introducing our &quot;Frosty Fuck Flakes&quot; Snowflake Ornaments, where everyone\u2019s favorite curse word gets to covertly shine and hopefully bring some humor to the holidays.\ud83e\udd23\u2744\ufe0f\n\nThis quirky snowflake ornament is here to add a dash of humor to your holiday decor. Crafted with a whimsical touch, it features a delightful surprise - the word &quot;Fuck&quot; carefully woven into its design, because what are the holidays without a little cursing and laughter?\n\n\ud83c\udf1f Key Features:\n\u2728 Handcrafted and 3D printed with a dash of humor\n\u2728 Premium-quality materials\n\u2728 Lighthearted &quot;Fuck&quot; motif\n\u2728 A smile-inducing glittered finish for added charm\n\u2728 Perfect for adding joy to Christmas decorations\n\n\ud83c\udf84 Whether you&#39;re adorning your Christmas tree or looking to share a chuckle with loved ones, our &quot;Frosty Fuck Flake&quot; Snowflake Ornament brings a twist of whimsy to any space. Hang it on your tree, gift it to a friend, or display it in your home to spark joy and laughter.\n\n\ud83c\udf81 Perfect as a funny gift or a treat for yourself, this ornament is a reminder to keep the holidays merry and bright.\n\nElevate your holiday decor with a touch of humor, and embrace the spirit of fun and hunor this season. Get your &quot;Frosty Fuck Flake&quot; Snowflake Ornament and add a smile to your festivities! \ud83c\udf32\u2744\ufe0f\ud83d\ude04",
+        "seller_user_id": 211518821,
+        "buyer_user_id": 111335328,
+        "create_timestamp": 1757439840,
+        "created_timestamp": 1757439840,
+        "paid_timestamp": 1757439847,
+        "shipped_timestamp": null,
+        "quantity": 1,
+        "listing_image_id": 5387427486,
+        "receipt_id": 3795852673,
+        "is_digital": false,
+        "file_data": "",
+        "listing_id": 1571639998,
+        "sku": "",
+        "product_id": 18189175127,
+        "transaction_type": "listing",
+        "price": {
+          "amount": 3199,
+          "divisor": 100,
+          "currency_code": "USD"
+        },
+        "shipping_cost": {
+          "amount": 0,
+          "divisor": 100,
+          "currency_code": "USD"
+        },
+        "variations": [
+          {
+            "property_id": 513,
+            "value_id": 1041636034154,
+            "formatted_name": "Select number of items",
+            "formatted_value": "4 pack of ornaments"
+          }
+        ],
+        "product_data": [
+          {
+            "property_id": 513,
+            "property_name": "Custom Property",
+            "scale_id": null,
+            "scale_name": null,
+            "value_ids": [
+              1041636034154
+            ],
+            "values": [
+              "4 pack of ornaments"
+            ]
+          }
+        ],
+        "shipping_profile_id": 219073643831,
+        "min_processing_days": 3,
+        "max_processing_days": 5,
+        "shipping_method": null,
+        "shipping_upgrade": "USPS First-Class Mail",
+        "expected_ship_date": 1757995140,
+        "buyer_coupon": 8,
+        "shop_coupon": 8
+      }
+    ],
+    "refunds": []
+  }
+]
