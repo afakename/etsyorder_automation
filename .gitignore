@@ -1,0 +1,6 @@
+etsy_env/
+*.pyc
+__pycache__/
+.env
+etsy_tokens.json
+.DS_Store
