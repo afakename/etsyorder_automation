@@ -1,4 +1,4 @@
-# main.py - Complete with open orders filtering by status field
+# main.py - Updated with preview variation logic
 import sys
 import argparse
 import json
@@ -107,6 +107,53 @@ class EtsyAutomation:
         # Standardize spacing
         normalized = ' '.join(normalized.split())
         return normalized
+    
+    def check_preview_request(self, variations):
+        """
+        Check if customer requested preview based on variation selections.
+        
+        MS variations: 
+        - Check "Choose the Center Piece" field for year info
+        - Check "Request Design Preview" field for preview request
+        
+        RR variations: Check "Request Design Preview" field
+        - "Yes Preview" = preview requested
+        
+        Returns: ('Yes' or 'No', year_value, center_value)
+        """
+        preview_requested = False
+        year_value = ''
+        center_value = 'star'  # Default
+        
+        for variation in variations:
+            property_name = variation.get('formatted_name', '')
+            property_value = variation.get('formatted_value', '')
+            
+            # MS: Check "Choose the Center Piece" variation for center and year
+            if 'Choose the Center Piece' in property_name or 'Center Piece' in property_name:
+                property_lower = property_value.lower()
+                
+                # Determine center type
+                if 'flake' in property_lower:
+                    center_value = 'flk'
+                else:
+                    center_value = 'star'
+                
+                # Check if year is included
+                if 'current year' in property_lower or '+ current year' in property_lower:
+                    year_value = datetime.now().strftime('%Y')
+                else:
+                    year_value = ''
+                
+                self.logger.info(f"MS Center Piece variation: {property_value} -> Center: {center_value}, Year: {year_value}")
+            
+            # Check "Request Design Preview" variation (both MS and RR)
+            if 'Request Design Preview' in property_name:
+                if 'Yes' in property_value or 'yes' in property_value.lower():
+                    preview_requested = True
+                    self.logger.info(f"Preview requested via variation: {property_value}")
+        
+        return ('Yes' if preview_requested else 'No', year_value, center_value)
     
     def run(self):
         """Main execution flow"""
@@ -336,6 +383,7 @@ class EtsyAutomation:
         needs_made = []
         needs_updated = []
         file_locations = []
+        preview_requests = []  # Track all preview requests
         
         for order in orders:
             customer_name = order.get('name', 'Unknown Customer')
@@ -355,19 +403,31 @@ class EtsyAutomation:
                 # Check file status with UPDATED logic
                 status, file_path, update_details = self.check_file_status(filename)
                 
-                # Check for preview request in message - expanded keywords
-                preview = '0'
+                # Check for preview request via variations (NEW LOGIC)
+                variations = transaction.get('variations', [])
+                preview_from_variation, year_from_variation = self.check_preview_request(variations)
+                
+                # Also check message for preview keywords (backup/legacy)
+                preview_from_message = '0'
                 if message:
                     message_lower = message.lower()
                     preview_keywords = ['preview', 'mock up', 'mockup', 'mock-up', 'proof', 
                                        'see the design', 'see design', 'approve', 'approval']
                     if any(keyword in message_lower for keyword in preview_keywords):
-                        preview = '1'
+                        preview_from_message = '1'
                 
-                # Extract variations
-                variations = self.filename_generator.extract_variations(transaction.get('variations', []))
+                # Final preview decision: variation takes precedence
+                if preview_from_variation == 'Yes':
+                    preview = 'Yes'
+                elif preview_from_message == '1':
+                    preview = 'Yes'
+                else:
+                    preview = 'No'
+                
+                # Extract variations for display
+                variation_dict = self.filename_generator.extract_variations(variations)
                 center = self.extract_center(filename, variations)
-                year = self.extract_year(filename)
+                year = year_from_variation if year_from_variation else self.extract_year(filename)
                 
                 order_data = {
                     'order_status': order_status,
@@ -379,7 +439,7 @@ class EtsyAutomation:
                     'update_details': update_details if update_details else '',
                     'quantity': transaction.get('quantity', 1),
                     'price': self.format_price(transaction.get('price', {})),
-                    'personalization': variations.get('Personalization', ''),
+                    'personalization': variation_dict.get('Personalization', ''),
                     'center': center,
                     'year': year if year else 'No',
                     'preview': preview,
@@ -388,6 +448,21 @@ class EtsyAutomation:
                 }
                 
                 all_orders.append(order_data)
+                
+                # Track preview requests separately
+                if preview == 'Yes':
+                    preview_requests.append({
+                        'order_status': order_status,
+                        'sent': '',  # Checkbox column
+                        'order_id': order_id,
+                        'customer_name': customer_name,
+                        'name': variation_dict.get('Personalization', ''),
+                        'sku': transaction.get('sku', ''),
+                        'center': center,
+                        'year': year if year else 'No',
+                        'generated_filename': filename,
+                        'message': message[:200] if message else ''
+                    })
                 
                 if status == 'make':
                     needs_made.append(order_data)
@@ -400,7 +475,8 @@ class EtsyAutomation:
             'all_orders': all_orders,
             'needs_made': needs_made,
             'needs_updated': needs_updated,
-            'file_locations': file_locations
+            'file_locations': file_locations,
+            'preview_requests': preview_requests
         }
     
     def process_other_orders(self, orders):
@@ -455,6 +531,25 @@ class EtsyAutomation:
         rr_update = [item for item in workflow_results['needs_updated'] if 'MS' not in item['sku']]
         
         with pd.ExcelWriter(output_file, engine='openpyxl') as writer:
+            # PREVIEW REQUESTS SHEET (First sheet for visibility)
+            if workflow_results['preview_requests']:
+                preview_data = []
+                for item in workflow_results['preview_requests']:
+                    preview_data.append({
+                        'Status': item['order_status'],
+                        'Sent': item['sent'],
+                        'Order ID': item['order_id'],
+                        'Customer': item['customer_name'],
+                        'Name': item['name'],
+                        'SKU': item['sku'],
+                        'Center': item['center'],
+                        'Year': item['year'],
+                        'Generated Filename': item['generated_filename'],
+                        'Message': item['message']
+                    })
+                df_preview = pd.DataFrame(preview_data)
+                df_preview.to_excel(writer, sheet_name='Preview Requests', index=False)
+            
             # MS Needs Made sheet
             if ms_make:
                 ms_make_data = []
@@ -624,6 +719,7 @@ class EtsyAutomation:
         print(f"\n{'='*60}")
         print(f"Reports saved to: {output_file}")
         print(f"{'='*60}")
+        print(f"Preview Requests: {len(workflow_results['preview_requests'])}")
         print(f"MS - Needs Made: {len(ms_make)}")
         print(f"MS - Needs Updated: {len(ms_update)}")
         print(f"RR - Needs Made: {len(rr_make)}")
