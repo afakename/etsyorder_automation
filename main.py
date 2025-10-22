@@ -111,49 +111,49 @@ class EtsyAutomation:
     def check_preview_request(self, variations):
         """
         Check if customer requested preview based on variation selections.
-        
-        MS variations: 
+
+        MS variations:
         - Check "Choose the Center Piece" field for year info
         - Check "Request Design Preview" field for preview request
-        
+
         RR variations: Check "Request Design Preview" field
         - "Yes Preview" = preview requested
-        
-        Returns: ('Yes' or 'No', year_value, center_value)
+
+        Returns: ('Preview' or 'No', year_value, center_value)
         """
         preview_requested = False
         year_value = ''
         center_value = 'star'  # Default
-        
+
         for variation in variations:
             property_name = variation.get('formatted_name', '')
             property_value = variation.get('formatted_value', '')
-            
+
             # MS: Check "Choose the Center Piece" variation for center and year
             if 'Choose the Center Piece' in property_name or 'Center Piece' in property_name:
                 property_lower = property_value.lower()
-                
+
                 # Determine center type
                 if 'flake' in property_lower:
                     center_value = 'flk'
                 else:
                     center_value = 'star'
-                
+
                 # Check if year is included
                 if 'current year' in property_lower or '+ current year' in property_lower:
                     year_value = datetime.now().strftime('%Y')
                 else:
                     year_value = ''
-                
+
                 self.logger.info(f"MS Center Piece variation: {property_value} -> Center: {center_value}, Year: {year_value}")
-            
+
             # Check "Request Design Preview" variation (both MS and RR)
             if 'Request Design Preview' in property_name:
                 if 'Yes' in property_value or 'yes' in property_value.lower():
                     preview_requested = True
                     self.logger.info(f"Preview requested via variation: {property_value}")
-        
-        return ('Yes' if preview_requested else 'No', year_value, center_value)
+
+        return ('Preview' if preview_requested else 'No', year_value, center_value)
     
     def run(self):
         """Main execution flow"""
@@ -417,10 +417,10 @@ class EtsyAutomation:
                         preview_from_message = '1'
                 
                 # Final preview decision: variation takes precedence
-                if preview_from_variation == 'Yes':
-                    preview = 'Yes'
+                if preview_from_variation == 'Preview':
+                    preview = 'Preview'
                 elif preview_from_message == '1':
-                    preview = 'Yes'
+                    preview = 'Preview'
                 else:
                     preview = 'No'
                 
@@ -448,9 +448,9 @@ class EtsyAutomation:
                 }
                 
                 all_orders.append(order_data)
-                
+
                 # Track preview requests separately
-                if preview == 'Yes':
+                if preview == 'Preview':
                     preview_requests.append({
                         'order_status': order_status,
                         'sent': '',  # Checkbox column
