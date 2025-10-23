@@ -451,6 +451,18 @@ class EtsyAutomation:
                 
                 # Track preview requests separately
                 if preview == 'Yes':
+                    # Determine user-friendly design status
+                    if status == 'exists':
+                        design_status = 'Already made'
+                    elif status == 'update':
+                        # Check if MS or RR for update status
+                        if 'MS' in transaction.get('sku', ''):
+                            design_status = 'MS-Needs Updated'
+                        else:
+                            design_status = 'RR-Needs Updated'
+                    else:  # status == 'make'
+                        design_status = 'Needs made'
+
                     preview_requests.append({
                         'order_status': order_status,
                         'sent': '',  # Checkbox column
@@ -460,6 +472,7 @@ class EtsyAutomation:
                         'sku': transaction.get('sku', ''),
                         'center': center,
                         'year': year if year else 'No',
+                        'design_status': design_status,
                         'generated_filename': filename,
                         'message': message[:200] if message else ''
                     })
@@ -544,6 +557,7 @@ class EtsyAutomation:
                         'SKU': item['sku'],
                         'Center': item['center'],
                         'Year': item['year'],
+                        'Design Status': item['design_status'],
                         'Generated Filename': item['generated_filename'],
                         'Message': item['message']
                     })
