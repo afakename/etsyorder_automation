@@ -1,6 +1,7 @@
 # filename_generator.py
 from datetime import datetime
 from logger import setup_logger
+import re
 
 class FilenameGenerator:
     def __init__(self, logger=None):
@@ -50,21 +51,36 @@ class FilenameGenerator:
         return variations
     
     def generate_ms_filename(self, name, variations):
-        """Generate MS ornament filename: {Name} Ms {Design} {Year}"""
-        design_raw = variations.get('Choose the Center Piece', 'Star')
-        year_raw = variations.get('Year or No Year', '')
+        """
+        Generate MS ornament filename: {Name} Ms {Design} {Year}
+        Handles "Choose the Center Piece" variation which can be:
+        - "Star"
+        - "Flake"
+        - "Current Year" 
+        - "Flake w/Current Year"
+        - "Star w/2024" (or other specific year)
+        - "Flake w/2024" (or other specific year)
+        """
+        center_piece = variations.get('Choose the Center Piece', 'Star')
         
-        # Normalize design
-        design = self.normalize_design(design_raw)
+        # Parse the center piece selection
+        center_lower = center_piece.lower()
         
-        # Handle year dynamically
-        if 'current year' in year_raw.lower():
-            year = self.get_current_year()  # Converts "Current Year" to actual year
-        elif year_raw.lower() in ['no year', '']:
-            year = ''
+        # Determine design and year from center piece
+        if 'flake' in center_lower or 'flk' in center_lower:
+            design = 'Flk'
         else:
-            # It's already a specific year like "2024"
-            year = year_raw
+            design = 'Star'
+        
+        # Determine year
+        if 'current year' in center_lower:
+            year = self.get_current_year()
+        elif re.search(r'\d{4}', center_piece):
+            # Extract explicit year like "2024"
+            year_match = re.search(r'\d{4}', center_piece)
+            year = year_match.group(0)
+        else:
+            year = ''
         
         # Build filename
         parts = [name, 'Ms', design]
@@ -72,24 +88,35 @@ class FilenameGenerator:
             parts.append(str(year))
         
         filename = ' '.join(parts)
-        self.logger.info(f"Generated MS filename: {filename}")
+        self.logger.info(f"Generated MS filename: {filename} (from center piece: '{center_piece}')")
         return filename
     
     def generate_regular_filename(self, name, variations):
-        """Generate regular ornament filename: {Name} {Year or Star}"""
-        year_or_star_raw = variations.get('Current Year or Star Design', 'Star')
+        """
+        Generate RR ornament filename: {Name} {Year or Star}
+        Handles "Choose the Center Piece" variation which can be:
+        - "Star Design"
+        - "Current Year"
+        - Specific year like "2024"
+        """
+        center_piece = variations.get('Choose the Center Piece', 'Star')
+        center_lower = center_piece.lower()
         
         # Handle dynamic year for RR variants
-        if 'current year' in year_or_star_raw.lower():
+        if 'current year' in center_lower:
             year_or_star = self.get_current_year()
-        elif 'star' in year_or_star_raw.lower():
+        elif 'star' in center_lower:
             year_or_star = 'Star'
+        elif re.search(r'\d{4}', center_piece):
+            # Extract explicit year
+            year_match = re.search(r'\d{4}', center_piece)
+            year_or_star = year_match.group(0)
         else:
-            # Already a specific year
-            year_or_star = year_or_star_raw
+            # Default to star if unclear
+            year_or_star = 'Star'
         
         filename = f"{name} {year_or_star}"
-        self.logger.info(f"Generated regular filename: {filename}")
+        self.logger.info(f"Generated RR filename: {filename} (from center piece: '{center_piece}')")
         return filename
     
     def normalize_design(self, design_raw):

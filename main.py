@@ -1,4 +1,4 @@
-# main.py - Updated with preview variation logic
+# main.py - Complete with open orders filtering by status field
 import sys
 import argparse
 import json
@@ -101,59 +101,19 @@ class EtsyAutomation:
             self.logger.error(f"Could not save order tracking: {e}")
     
     def normalize_filename(self, filename):
-        """Normalize filename for comparison - handles case variations"""
+        """Normalize filename for comparison - handles case variations and spelling variations"""
         # Convert to lowercase and normalize common variations
         normalized = filename.lower()
         # Standardize spacing
         normalized = ' '.join(normalized.split())
+        
+        # Standardize flake/flk variations to 'flk'
+        normalized = normalized.replace('flake', 'flk')
+        
+        # Additional normalizations if needed in the future
+        # normalized = normalized.replace('star', 'str') # example
+        
         return normalized
-    
-    def check_preview_request(self, variations):
-        """
-        Check if customer requested preview based on variation selections.
-        
-        MS variations: 
-        - Check "Choose the Center Piece" field for year info
-        - Check "Request Design Preview" field for preview request
-        
-        RR variations: Check "Request Design Preview" field
-        - "Yes Preview" = preview requested
-        
-        Returns: ('Yes' or 'No', year_value, center_value)
-        """
-        preview_requested = False
-        year_value = ''
-        center_value = 'star'  # Default
-        
-        for variation in variations:
-            property_name = variation.get('formatted_name', '')
-            property_value = variation.get('formatted_value', '')
-            
-            # MS: Check "Choose the Center Piece" variation for center and year
-            if 'Choose the Center Piece' in property_name or 'Center Piece' in property_name:
-                property_lower = property_value.lower()
-                
-                # Determine center type
-                if 'flake' in property_lower:
-                    center_value = 'flk'
-                else:
-                    center_value = 'star'
-                
-                # Check if year is included
-                if 'current year' in property_lower or '+ current year' in property_lower:
-                    year_value = datetime.now().strftime('%Y')
-                else:
-                    year_value = ''
-                
-                self.logger.info(f"MS Center Piece variation: {property_value} -> Center: {center_value}, Year: {year_value}")
-            
-            # Check "Request Design Preview" variation (both MS and RR)
-            if 'Request Design Preview' in property_name:
-                if 'Yes' in property_value or 'yes' in property_value.lower():
-                    preview_requested = True
-                    self.logger.info(f"Preview requested via variation: {property_value}")
-        
-        return ('Yes' if preview_requested else 'No', year_value, center_value)
     
     def run(self):
         """Main execution flow"""
@@ -383,7 +343,6 @@ class EtsyAutomation:
         needs_made = []
         needs_updated = []
         file_locations = []
-        preview_requests = []  # Track all preview requests
         
         for order in orders:
             customer_name = order.get('name', 'Unknown Customer')
@@ -403,31 +362,33 @@ class EtsyAutomation:
                 # Check file status with UPDATED logic
                 status, file_path, update_details = self.check_file_status(filename)
                 
-                # Check for preview request via variations (NEW LOGIC)
-                variations = transaction.get('variations', [])
-                preview_from_variation, year_from_variation = self.check_preview_request(variations)
+                # Extract variations first
+                variations = self.filename_generator.extract_variations(transaction.get('variations', []))
                 
-                # Also check message for preview keywords (backup/legacy)
-                preview_from_message = '0'
-                if message:
-                    message_lower = message.lower()
-                    preview_keywords = ['preview', 'mock up', 'mockup', 'mock-up', 'proof', 
-                                       'see the design', 'see design', 'approve', 'approval']
-                    if any(keyword in message_lower for keyword in preview_keywords):
-                        preview_from_message = '1'
+                # Check for preview request in VARIATIONS (not message)
+                # Check multiple possible field names
+                preview = '0'
+                preview_requested = False
                 
-                # Final preview decision: variation takes precedence
-                if preview_from_variation == 'Yes':
-                    preview = 'Yes'
-                elif preview_from_message == '1':
-                    preview = 'Yes'
-                else:
-                    preview = 'No'
+                # Log all variations for debugging
+                self.logger.debug(f"Order {order_id} variations: {variations}")
                 
-                # Extract variations for display
-                variation_dict = self.filename_generator.extract_variations(variations)
+                # Check multiple possible variation names
+                for key, value in variations.items():
+                    if key and value:
+                        key_lower = key.lower()
+                        value_lower = value.lower()
+                        # Check if this is a preview-related field
+                        if 'preview' in key_lower or 'proof' in key_lower or 'mock' in key_lower:
+                            self.logger.info(f"Found preview variation: {key} = {value}")
+                            if 'yes' in value_lower:
+                                preview = '1'
+                                preview_requested = True
+                                self.logger.info(f"Preview requested for order {order_id}")
+                                break
+                
                 center = self.extract_center(filename, variations)
-                year = year_from_variation if year_from_variation else self.extract_year(filename)
+                year = self.extract_year(filename)
                 
                 order_data = {
                     'order_status': order_status,
@@ -439,30 +400,16 @@ class EtsyAutomation:
                     'update_details': update_details if update_details else '',
                     'quantity': transaction.get('quantity', 1),
                     'price': self.format_price(transaction.get('price', {})),
-                    'personalization': variation_dict.get('Personalization', ''),
+                    'personalization': variations.get('Personalization', ''),
                     'center': center,
                     'year': year if year else 'No',
                     'preview': preview,
+                    'preview_requested': preview_requested,
                     'message': message[:100] if message else '',
                     'generated_filename': filename
                 }
                 
                 all_orders.append(order_data)
-                
-                # Track preview requests separately
-                if preview == 'Yes':
-                    preview_requests.append({
-                        'order_status': order_status,
-                        'sent': '',  # Checkbox column
-                        'order_id': order_id,
-                        'customer_name': customer_name,
-                        'name': variation_dict.get('Personalization', ''),
-                        'sku': transaction.get('sku', ''),
-                        'center': center,
-                        'year': year if year else 'No',
-                        'generated_filename': filename,
-                        'message': message[:200] if message else ''
-                    })
                 
                 if status == 'make':
                     needs_made.append(order_data)
@@ -475,8 +422,7 @@ class EtsyAutomation:
             'all_orders': all_orders,
             'needs_made': needs_made,
             'needs_updated': needs_updated,
-            'file_locations': file_locations,
-            'preview_requests': preview_requests
+            'file_locations': file_locations
         }
     
     def process_other_orders(self, orders):
@@ -520,6 +466,43 @@ class EtsyAutomation:
             return f"${amount / divisor:.2f}"
         return str(price_data)
     
+    def apply_customer_grouping(self, worksheet, data, customer_col_name):
+        """
+        Apply alternating row colors by customer to visually group orders
+        
+        Args:
+            worksheet: openpyxl worksheet object
+            data: DataFrame containing the data
+            customer_col_name: Name of the customer column
+        """
+        from openpyxl.styles import PatternFill
+        
+        # Define two alternating colors
+        color1 = PatternFill(start_color="E3F2FD", end_color="E3F2FD", fill_type="solid")  # Light blue
+        color2 = PatternFill(start_color="FFFFFF", end_color="FFFFFF", fill_type="solid")  # White
+        
+        if customer_col_name not in data.columns:
+            return
+        
+        # Start with first color
+        current_color = color1
+        last_customer = None
+        
+        # Apply colors (start at row 2 because row 1 is headers)
+        for idx in range(len(data)):
+            row_num = idx + 2  # Excel rows start at 1, headers are row 1
+            customer = data.iloc[idx][customer_col_name]
+            
+            # Switch color when customer changes
+            if last_customer is not None and customer != last_customer:
+                current_color = color1 if current_color == color2 else color2
+            
+            # Apply color to entire row
+            for col in range(1, worksheet.max_column + 1):
+                worksheet.cell(row=row_num, column=col).fill = current_color
+            
+            last_customer = customer
+    
     def generate_reports(self, workflow_results, peace_love_hope_results, other_orders_results):
         """Generate Excel reports with multiple sheets"""
         output_file = self.output_folder / "etsy_orders.xlsx"
@@ -530,25 +513,72 @@ class EtsyAutomation:
         rr_make = [item for item in workflow_results['needs_made'] if 'MS' not in item['sku']]
         rr_update = [item for item in workflow_results['needs_updated'] if 'MS' not in item['sku']]
         
+        # Collect all preview-requested items for Preview sheet
+        preview_items = []
+        for item in workflow_results['all_orders']:
+            if item.get('preview_requested', False):
+                self.logger.info(f"Adding to preview sheet: {item['generated_filename']}")
+                # Determine production location based on file status and SKU
+                if item['file_status'] == 'exists':
+                    location = 'Already Made'
+                    file_path_display = item['file_path']
+                elif item['file_status'] == 'update':
+                    if 'MS' in item['sku']:
+                        location = 'MS - Needs Updated'
+                    else:
+                        location = 'RR - Needs Updated'
+                    file_path_display = ''
+                else:  # make
+                    if 'MS' in item['sku']:
+                        location = 'MS - Needs Made'
+                    else:
+                        location = 'RR - Needs Made'
+                    file_path_display = ''
+                
+                preview_items.append({
+                    'Status': item['order_status'],
+                    'Order ID': item['order_id'],
+                    'Customer': item['customer_name'],
+                    'Name': item['personalization'],
+                    'SKU': item['sku'],
+                    'Production Location': location,
+                    'File Path': file_path_display,
+                    'Quantity': item['quantity'],
+                    'Generated Filename': item['generated_filename'],
+                    'Message': item['message']
+                })
+        
+        self.logger.info(f"Total preview requests found: {len(preview_items)}")
+        
         with pd.ExcelWriter(output_file, engine='openpyxl') as writer:
-            # PREVIEW REQUESTS SHEET (First sheet for visibility)
-            if workflow_results['preview_requests']:
-                preview_data = []
-                for item in workflow_results['preview_requests']:
-                    preview_data.append({
-                        'Status': item['order_status'],
-                        'Sent': item['sent'],
-                        'Order ID': item['order_id'],
-                        'Customer': item['customer_name'],
-                        'Name': item['name'],
-                        'SKU': item['sku'],
-                        'Center': item['center'],
-                        'Year': item['year'],
-                        'Generated Filename': item['generated_filename'],
-                        'Message': item['message']
-                    })
-                df_preview = pd.DataFrame(preview_data)
-                df_preview.to_excel(writer, sheet_name='Preview Requests', index=False)
+            # Preview Requests sheet - FIRST SHEET (always create, even if empty)
+            if preview_items:
+                df_preview = pd.DataFrame(preview_items)
+            else:
+                # Create empty dataframe with column headers
+                df_preview = pd.DataFrame(columns=[
+                    'Status', 'Order ID', 'Customer', 'Name', 'SKU', 
+                    'Production Location', 'File Path', 'Quantity', 
+                    'Generated Filename', 'Message'
+                ])
+            
+            df_preview.to_excel(writer, sheet_name='Preview Requests', index=False)
+            
+            # Apply customer grouping colors
+            if len(preview_items) > 0:
+                worksheet = writer.sheets['Preview Requests']
+                self.apply_customer_grouping(worksheet, df_preview, 'Customer')
+            
+            # Add hyperlinks to file paths for Already Made items
+            if len(preview_items) > 0:
+                worksheet = writer.sheets['Preview Requests']
+                file_path_col = df_preview.columns.get_loc('File Path') + 1
+                for idx in range(len(df_preview)):
+                    file_path = df_preview.iloc[idx]['File Path']
+                    if file_path and file_path != 'NOT FOUND' and file_path != '':
+                        cell = worksheet.cell(row=idx+2, column=file_path_col)
+                        cell.hyperlink = file_path
+                        cell.style = 'Hyperlink'
             
             # MS Needs Made sheet
             if ms_make:
@@ -571,6 +601,10 @@ class EtsyAutomation:
                     })
                 df_ms_make = pd.DataFrame(ms_make_data)
                 df_ms_make.to_excel(writer, sheet_name='MS - Needs Made', index=False)
+                
+                # Apply customer grouping colors
+                worksheet = writer.sheets['MS - Needs Made']
+                self.apply_customer_grouping(worksheet, df_ms_make, 'Customer')
             
             # MS Needs Updated sheet
             if ms_update:
@@ -594,6 +628,10 @@ class EtsyAutomation:
                     })
                 df_ms_update = pd.DataFrame(ms_update_data)
                 df_ms_update.to_excel(writer, sheet_name='MS - Needs Updated', index=False)
+                
+                # Apply customer grouping colors
+                worksheet = writer.sheets['MS - Needs Updated']
+                self.apply_customer_grouping(worksheet, df_ms_update, 'Customer')
             
             # RR Needs Made sheet
             if rr_make:
@@ -615,6 +653,10 @@ class EtsyAutomation:
                     })
                 df_rr_make = pd.DataFrame(rr_make_data)
                 df_rr_make.to_excel(writer, sheet_name='RR - Needs Made', index=False)
+                
+                # Apply customer grouping colors
+                worksheet = writer.sheets['RR - Needs Made']
+                self.apply_customer_grouping(worksheet, df_rr_make, 'Customer')
             
             # RR Needs Updated sheet
             if rr_update:
@@ -637,6 +679,10 @@ class EtsyAutomation:
                     })
                 df_rr_update = pd.DataFrame(rr_update_data)
                 df_rr_update.to_excel(writer, sheet_name='RR - Needs Updated', index=False)
+                
+                # Apply customer grouping colors
+                worksheet = writer.sheets['RR - Needs Updated']
+                self.apply_customer_grouping(worksheet, df_rr_update, 'Customer')
             
             # Already Made sheet with hyperlinked file paths
             if workflow_results['file_locations']:
@@ -650,13 +696,17 @@ class EtsyAutomation:
                         'SKU': item['sku'],
                         'Generated Filename': item['generated_filename'],
                         'File Path': item['file_path'],
-                        'Quantity': item['quantity']
+                        'Quantity': item['quantity'],
+                        'Preview': 'Yes' if item.get('preview_requested', False) else 'No'
                     })
                 df_made = pd.DataFrame(made_data)
                 df_made.to_excel(writer, sheet_name='Already Made', index=False)
                 
-                # Add hyperlinks to file paths
+                # Apply customer grouping colors
                 worksheet = writer.sheets['Already Made']
+                self.apply_customer_grouping(worksheet, df_made, 'Customer')
+                
+                # Add hyperlinks to file paths
                 file_path_col = df_made.columns.get_loc('File Path') + 1
                 for idx in range(len(df_made)):
                     file_path = df_made.iloc[idx]['File Path']
@@ -719,7 +769,13 @@ class EtsyAutomation:
         print(f"\n{'='*60}")
         print(f"Reports saved to: {output_file}")
         print(f"{'='*60}")
-        print(f"Preview Requests: {len(workflow_results['preview_requests'])}")
+        
+        # Collect preview count
+        preview_count = len([item for item in workflow_results['all_orders'] if item.get('preview_requested', False)])
+        if preview_count > 0:
+            print(f"Preview Requests: {preview_count}")
+            print(f"{'='*60}")
+        
         print(f"MS - Needs Made: {len(ms_make)}")
         print(f"MS - Needs Updated: {len(ms_update)}")
         print(f"RR - Needs Made: {len(rr_make)}")
@@ -739,7 +795,7 @@ class EtsyAutomation:
                 'Name': item['personalization'],
                 'Center': item['center'],
                 'Year': item['year'],
-                'Preview': item['preview']
+                'Preview': 'preview' if item.get('preview_requested', False) else 'no'
             } for item in ms_make])
             
             ms_file = self.output_folder / 'illustrator_ms.csv'
@@ -753,7 +809,7 @@ class EtsyAutomation:
                 'Completed': '',
                 'Name': item['personalization'],
                 'Center': item['center'],
-                'Preview': item['preview']
+                'Preview': 'preview' if item.get('preview_requested', False) else 'no'
             } for item in rr_make])
             
             rr_file = self.output_folder / 'illustrator_rr.csv'
