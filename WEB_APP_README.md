@@ -29,12 +29,14 @@ The app will automatically open in your browser at `http://localhost:8501`
 - Shows all customers who requested design previews
 - Displays customer details, order info, and messages
 - Alert if you have pending preview requests
+- **✅ NEW: Check off "Sent" column as you send previews!**
 
 ### 🎨 Needs Made Tab
 - **MS - Needs Made**: Magic Star orders requiring new designs
 - **MS - Needs Updated**: Magic Star orders needing updates
 - **RR - Needs Made**: Rainbow Runner orders requiring new designs
 - **RR - Needs Updated**: Rainbow Runner orders needing updates
+- **✅ NEW: Check off "Completed" column as you finish each design!**
 - Interactive tables with all order details
 
 ### 📁 Already Made Tab
@@ -77,9 +79,16 @@ Navigate through the tabs to:
 - Find existing designs
 - Download reports
 
-### Step 4: Download Files
+### Step 4: Track Your Progress (NEW!)
+As you work through your orders:
+- **Check off "Completed"** boxes as you finish designs
+- **Check off "Sent"** boxes when you send preview requests
+- **Click "Save All Changes"** in the sidebar to save your progress
+- Changes are saved back to the Excel file automatically!
+
+### Step 5: Download Files
 Go to the **Downloads** tab to get:
-- Full Excel workbook with all sheets
+- Full Excel workbook with all sheets (includes your checkmarks!)
 - CSV files ready for Adobe Illustrator variable data
 
 ---
@@ -95,6 +104,14 @@ Go to the **Downloads** tab to get:
 - Beautiful charts showing order breakdowns
 - Color-coded metrics
 - Interactive data tables
+
+### ✅ Interactive Progress Tracking (NEW!)
+- **Editable checkboxes** in all tables
+- **Track completed designs** - check off as you finish
+- **Track sent previews** - mark when sent to customers
+- **Auto-save to Excel** - changes persist in your reports
+- **Unsaved changes warning** - never lose your progress
+- **Backup system** - original file backed up automatically
 
 ### 🔄 Real-time Updates
 - Pull fresh orders anytime

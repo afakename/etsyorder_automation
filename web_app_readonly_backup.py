@@ -1,6 +1,6 @@
 """
-Etsy Order Automation - Interactive Web Interface
-A Streamlit-based web application with editable checkboxes for managing Etsy orders
+Etsy Order Automation - Web Interface
+A Streamlit-based web application for managing Etsy orders
 """
 
 import streamlit as st
@@ -40,18 +40,23 @@ st.markdown("""
         border-radius: 0.5rem;
         border-left: 4px solid #1f77b4;
     }
+    .status-new {
+        background-color: #90EE90;
+        padding: 0.2rem 0.5rem;
+        border-radius: 0.3rem;
+        font-weight: bold;
+    }
+    .status-pulled {
+        background-color: #FFD700;
+        padding: 0.2rem 0.5rem;
+        border-radius: 0.3rem;
+        font-weight: bold;
+    }
     .preview-alert {
         background-color: #FFE4B5;
         padding: 1rem;
         border-radius: 0.5rem;
         border-left: 4px solid #FFA500;
-        margin: 1rem 0;
-    }
-    .success-message {
-        background-color: #90EE90;
-        padding: 1rem;
-        border-radius: 0.5rem;
-        border-left: 4px solid #28a745;
         margin: 1rem 0;
     }
 </style>
@@ -62,10 +67,6 @@ if 'last_run_data' not in st.session_state:
     st.session_state.last_run_data = None
 if 'automation_running' not in st.session_state:
     st.session_state.automation_running = False
-if 'edited_data' not in st.session_state:
-    st.session_state.edited_data = {}
-if 'changes_made' not in st.session_state:
-    st.session_state.changes_made = False
 
 def load_last_run_summary():
     """Load the most recent automation run summary"""
@@ -103,10 +104,6 @@ def get_order_statistics():
         # Read all sheets
         excel_data = pd.read_excel(last_run['excel_file'], sheet_name=None)
 
-        # Initialize edited_data if not already done
-        if 'edited_data' not in st.session_state or not st.session_state.edited_data:
-            st.session_state.edited_data = excel_data.copy()
-
         stats = {
             'run_time': last_run['run_time'],
             'total_workflow': len(excel_data.get('All Workflow Orders', [])),
@@ -127,40 +124,15 @@ def get_order_statistics():
         st.error(f"Error loading statistics: {e}")
         return None
 
-def save_changes_to_excel(stats):
-    """Save the edited data back to Excel"""
-    try:
-        # Create a backup of the original file
-        backup_file = stats['excel_file'].parent / f"{stats['excel_file'].stem}_backup.xlsx"
-        if not backup_file.exists():
-            import shutil
-            shutil.copy2(stats['excel_file'], backup_file)
-
-        # Write the edited data back to Excel
-        with pd.ExcelWriter(stats['excel_file'], engine='openpyxl') as writer:
-            for sheet_name, df in st.session_state.edited_data.items():
-                df.to_excel(writer, sheet_name=sheet_name, index=False)
-
-        st.session_state.changes_made = False
-        return True
-    except Exception as e:
-        st.error(f"Error saving changes: {e}")
-        return False
-
 def run_automation(mode, days):
     """Run the automation with progress tracking"""
     try:
         with st.spinner(f"Pulling orders ({mode} mode, {days} days back)..."):
             automation = EtsyAutomation(mode=mode, days_back=days)
             automation.run()
-            # Reset edited data after new pull
-            st.session_state.edited_data = {}
-            st.session_state.changes_made = False
             return True
     except Exception as e:
         st.error(f"Automation failed: {e}")
-        import traceback
-        st.error(traceback.format_exc())
         return False
 
 # Sidebar
@@ -196,16 +168,8 @@ with st.sidebar:
 
     st.markdown("---")
 
-    # Save changes button
-    stats = get_order_statistics()
-    if stats and st.session_state.changes_made:
-        st.markdown("### 💾 Save Changes")
-        if st.button("Save All Changes", type="primary", use_container_width=True):
-            if save_changes_to_excel(stats):
-                st.success("Changes saved!")
-                st.rerun()
-
     # Quick stats
+    stats = get_order_statistics()
     if stats:
         st.markdown("### 📊 Last Run")
         st.markdown(f"**Time:** {stats['run_time']}")
@@ -238,13 +202,8 @@ if stats is None:
     1. Use the sidebar to configure settings
     2. Click "Pull Orders Now" to run the automation
     3. View results and download reports below
-    4. **NEW:** Check off items as you complete them!
     """)
 else:
-    # Show changes indicator
-    if st.session_state.changes_made:
-        st.markdown('<div class="preview-alert">⚠️ You have unsaved changes! Click "Save All Changes" in the sidebar to save.</div>', unsafe_allow_html=True)
-
     # Display statistics in tabs
     tab1, tab2, tab3, tab4, tab5 = st.tabs(["📈 Dashboard", "🔔 Preview Requests", "🎨 Needs Made", "📁 Already Made", "📥 Downloads"])
 
@@ -348,137 +307,69 @@ else:
         if stats['preview_requests'] > 0:
             st.markdown(f'<div class="preview-alert">⚠️ You have <strong>{stats["preview_requests"]}</strong> preview requests that need attention!</div>', unsafe_allow_html=True)
 
-            preview_df = st.session_state.edited_data.get('Preview Requests', pd.DataFrame())
+            preview_df = stats['excel_data'].get('Preview Requests', pd.DataFrame())
 
             if not preview_df.empty:
-                st.markdown("### ✅ Check off items as you send previews")
-
-                # Make the dataframe editable
-                edited_preview = st.data_editor(
+                # Make the dataframe more interactive
+                st.dataframe(
                     preview_df,
                     use_container_width=True,
                     height=400,
                     column_config={
-                        "Sent": st.column_config.CheckboxColumn(
-                            "Sent ✓",
-                            help="Check when preview has been sent",
-                            default=False,
-                        ),
                         "Status": st.column_config.TextColumn("Status", width="small"),
+                        "Sent": st.column_config.CheckboxColumn("Sent", width="small"),
                         "Order ID": st.column_config.NumberColumn("Order ID", width="medium"),
                         "Customer": st.column_config.TextColumn("Customer", width="medium"),
                         "Name": st.column_config.TextColumn("Name", width="medium"),
                         "Message": st.column_config.TextColumn("Message", width="large")
-                    },
-                    disabled=["Status", "Order ID", "Customer", "Name", "SKU", "Center", "Year", "Generated Filename", "Message"],
-                    key="preview_editor"
+                    }
                 )
 
-                # Track if data changed
-                if not edited_preview.equals(preview_df):
-                    st.session_state.edited_data['Preview Requests'] = edited_preview
-                    st.session_state.changes_made = True
-                    st.info("✏️ Changes detected! Don't forget to save in the sidebar.")
-
+                # Quick actions
+                st.markdown("### Quick Actions")
+                col1, col2 = st.columns(2)
+                with col1:
+                    if st.button("📧 Copy All Customer Emails"):
+                        st.info("Feature coming soon!")
+                with col2:
+                    if st.button("✅ Mark All as Sent"):
+                        st.info("Feature coming soon!")
         else:
             st.success("✅ No preview requests at this time!")
 
     with tab3:
         st.markdown("## 🎨 Orders Needing Designs")
-        st.markdown("### ✅ Check 'Completed' as you finish each design")
 
         # MS Needs Made
-        ms_make_df = st.session_state.edited_data.get('MS - Needs Made', pd.DataFrame())
+        ms_make_df = stats['excel_data'].get('MS - Needs Made', pd.DataFrame())
         if not ms_make_df.empty:
             st.markdown(f"### MS - Needs Made ({len(ms_make_df)} orders)")
-
-            edited_ms_make = st.data_editor(
+            st.dataframe(
                 ms_make_df,
                 use_container_width=True,
                 column_config={
-                    "Completed": st.column_config.CheckboxColumn(
-                        "Done ✓",
-                        help="Check when design is completed",
-                        default=False,
-                    ),
+                    "Completed": st.column_config.CheckboxColumn("Done", width="small"),
                     "Preview": st.column_config.TextColumn("Preview", width="small"),
-                },
-                disabled=["Status", "Name", "Center", "Year", "Preview", "Quantity", "Order ID", "Customer", "SKU", "Price", "Message", "Generated Filename"],
-                key="ms_make_editor"
+                }
             )
-
-            if not edited_ms_make.equals(ms_make_df):
-                st.session_state.edited_data['MS - Needs Made'] = edited_ms_make
-                st.session_state.changes_made = True
 
         # MS Needs Updated
-        ms_update_df = st.session_state.edited_data.get('MS - Needs Updated', pd.DataFrame())
+        ms_update_df = stats['excel_data'].get('MS - Needs Updated', pd.DataFrame())
         if not ms_update_df.empty:
             st.markdown(f"### MS - Needs Updated ({len(ms_update_df)} orders)")
-
-            edited_ms_update = st.data_editor(
-                ms_update_df,
-                use_container_width=True,
-                column_config={
-                    "Completed": st.column_config.CheckboxColumn(
-                        "Done ✓",
-                        help="Check when update is completed",
-                        default=False,
-                    ),
-                },
-                disabled=["Status", "Name", "Center", "Year", "Preview", "Quantity", "Order ID", "Customer", "SKU", "Price", "Message", "Generated Filename", "Update Details"],
-                key="ms_update_editor"
-            )
-
-            if not edited_ms_update.equals(ms_update_df):
-                st.session_state.edited_data['MS - Needs Updated'] = edited_ms_update
-                st.session_state.changes_made = True
+            st.dataframe(ms_update_df, use_container_width=True)
 
         # RR Needs Made
-        rr_make_df = st.session_state.edited_data.get('RR - Needs Made', pd.DataFrame())
+        rr_make_df = stats['excel_data'].get('RR - Needs Made', pd.DataFrame())
         if not rr_make_df.empty:
             st.markdown(f"### RR - Needs Made ({len(rr_make_df)} orders)")
-
-            edited_rr_make = st.data_editor(
-                rr_make_df,
-                use_container_width=True,
-                column_config={
-                    "Completed": st.column_config.CheckboxColumn(
-                        "Done ✓",
-                        help="Check when design is completed",
-                        default=False,
-                    ),
-                },
-                disabled=["Status", "Name", "Center", "Preview", "Quantity", "Order ID", "Customer", "SKU", "Price", "Message", "Generated Filename"],
-                key="rr_make_editor"
-            )
-
-            if not edited_rr_make.equals(rr_make_df):
-                st.session_state.edited_data['RR - Needs Made'] = edited_rr_make
-                st.session_state.changes_made = True
+            st.dataframe(rr_make_df, use_container_width=True)
 
         # RR Needs Updated
-        rr_update_df = st.session_state.edited_data.get('RR - Needs Updated', pd.DataFrame())
+        rr_update_df = stats['excel_data'].get('RR - Needs Updated', pd.DataFrame())
         if not rr_update_df.empty:
             st.markdown(f"### RR - Needs Updated ({len(rr_update_df)} orders)")
-
-            edited_rr_update = st.data_editor(
-                rr_update_df,
-                use_container_width=True,
-                column_config={
-                    "Completed": st.column_config.CheckboxColumn(
-                        "Done ✓",
-                        help="Check when update is completed",
-                        default=False,
-                    ),
-                },
-                disabled=["Status", "Name", "Center", "Preview", "Quantity", "Order ID", "Customer", "SKU", "Price", "Message", "Generated Filename", "Update Details"],
-                key="rr_update_editor"
-            )
-
-            if not edited_rr_update.equals(rr_update_df):
-                st.session_state.edited_data['RR - Needs Updated'] = edited_rr_update
-                st.session_state.changes_made = True
+            st.dataframe(rr_update_df, use_container_width=True)
 
         if ms_make_df.empty and ms_update_df.empty and rr_make_df.empty and rr_update_df.empty:
             st.success("✅ All orders have designs ready!")
@@ -486,7 +377,7 @@ else:
     with tab4:
         st.markdown("## 📁 Already Made Designs")
 
-        already_made_df = st.session_state.edited_data.get('Already Made', pd.DataFrame())
+        already_made_df = stats['excel_data'].get('Already Made', pd.DataFrame())
 
         if not already_made_df.empty:
             st.markdown(f"Found **{len(already_made_df)}** orders with existing designs!")
@@ -556,7 +447,7 @@ st.markdown("---")
 st.markdown(
     """
     <div style='text-align: center; color: #666; padding: 1rem;'>
-    <p>Etsy Order Automation v2.0 - Interactive Edition | Built with Streamlit ❄️</p>
+    <p>Etsy Order Automation v1.0 | Built with Streamlit ❄️</p>
     </div>
     """,
     unsafe_allow_html=True
