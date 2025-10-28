@@ -16,20 +16,44 @@ class FilenameGenerator:
             "PerSnoFlkOrn-RR-06": {"type": "RR", "format": "{name} {year_or_star}"},
         }
     
+    def smart_capitalize_name(self, name):
+        """
+        Intelligently capitalize names:
+        - Convert ALL CAPS to title case (JESUS -> Jesus)
+        - Preserve mixed case names (McCarthy, DrAdams, MacQueen)
+        """
+        # If the name is empty or None, return it as-is
+        if not name or not name.strip():
+            return name
+
+        name = name.strip()
+
+        # Check if name is ALL CAPS (all letters are uppercase)
+        # We check if it's all uppercase AND has at least one letter
+        if name.isupper() and any(c.isalpha() for c in name):
+            # Convert to title case
+            return name.title()
+
+        # If name has mixed case (like McCarthy, DrAdams, MacQueen), preserve it
+        return name
+
     def generate_filename(self, transaction):
         """Generate filename from transaction data"""
         sku = transaction.get('sku', '')
-        
+
         if sku not in self.sku_mapping:
             self.logger.warning(f"Unknown SKU: {sku}")
             return None
-        
+
         # Extract variation data
         variations = self.extract_variations(transaction.get('variations', []))
-        name = variations.get('Personalization', 'Unknown')
-        
+        name_raw = variations.get('Personalization', 'Unknown')
+
+        # Apply smart capitalization
+        name = self.smart_capitalize_name(name_raw)
+
         product_info = self.sku_mapping[sku]
-        
+
         if product_info["type"] == "MS":
             return self.generate_ms_filename(name, variations)
         else:
