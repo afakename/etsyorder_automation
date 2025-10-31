@@ -128,15 +128,22 @@ def scale_to_target_size(geometry, original_width, original_height):
     """
     print(f"📏 Scaling to target dimensions...")
 
-    # Determine which side is longest
-    longest_original = max(original_width, original_height)
-    scale_factor = TARGET_LONGEST_SIDE_MM / longest_original
+    # Get actual geometry bounds (this is more reliable than SVG attributes)
+    bounds = geometry.bounds  # (minx, miny, maxx, maxy)
+    actual_width = bounds[2] - bounds[0]
+    actual_height = bounds[3] - bounds[1]
+
+    print(f"  SVG reported: {original_width:.2f} x {original_height:.2f}")
+    print(f"  Actual geometry: {actual_width:.2f} x {actual_height:.2f}")
+
+    # Determine which side is longest (use actual geometry bounds)
+    longest_actual = max(actual_width, actual_height)
+    scale_factor = TARGET_LONGEST_SIDE_MM / longest_actual
 
     # Calculate final dimensions
-    final_width = original_width * scale_factor
-    final_height = original_height * scale_factor
+    final_width = actual_width * scale_factor
+    final_height = actual_height * scale_factor
 
-    print(f"  Original: {original_width:.2f} x {original_height:.2f}")
     print(f"  Scale factor: {scale_factor:.4f}")
     print(f"  Final: {final_width:.2f}mm x {final_height:.2f}mm x {EXTRUSION_DEPTH_MM}mm")
 
@@ -270,15 +277,47 @@ def convert_svg_to_3d(svg_file, output_stl=None, output_3mf=None):
 def main():
     """Command-line interface"""
     if len(sys.argv) < 2:
-        print("Usage: python converter.py <input.svg> [output.stl] [output.3mf]")
-        print("\nExample:")
+        print("Usage: python converter.py <input.svg> [options]")
+        print("\nOptions:")
+        print("  --output-dir DIR    Save output files to specified directory")
+        print("  output.stl          Specify STL output path")
+        print("  output.3mf          Specify 3MF output path")
+        print("\nExamples:")
         print("  python converter.py design.svg")
+        print("  python converter.py design.svg --output-dir /path/to/output")
         print("  python converter.py design.svg output.stl output.3mf")
         sys.exit(1)
 
     svg_file = sys.argv[1]
-    output_stl = sys.argv[2] if len(sys.argv) > 2 else None
-    output_3mf = sys.argv[3] if len(sys.argv) > 3 else None
+    output_dir = None
+    output_stl = None
+    output_3mf = None
+
+    # Parse arguments
+    i = 2
+    while i < len(sys.argv):
+        if sys.argv[i] == '--output-dir' and i + 1 < len(sys.argv):
+            output_dir = sys.argv[i + 1]
+            i += 2
+        elif output_stl is None:
+            output_stl = sys.argv[i]
+            i += 1
+        elif output_3mf is None:
+            output_3mf = sys.argv[i]
+            i += 1
+        else:
+            i += 1
+
+    # Handle output directory
+    if output_dir:
+        svg_path = Path(svg_file)
+        output_dir_path = Path(output_dir)
+        output_dir_path.mkdir(parents=True, exist_ok=True)
+
+        if output_stl is None:
+            output_stl = output_dir_path / svg_path.with_suffix('.stl').name
+        if output_3mf is None:
+            output_3mf = output_dir_path / svg_path.with_suffix('.3mf').name
 
     try:
         convert_svg_to_3d(svg_file, output_stl, output_3mf)
