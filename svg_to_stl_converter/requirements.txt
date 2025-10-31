@@ -1,0 +1,19 @@
+# SVG to STL/3MF Converter Dependencies
+
+# Core 3D mesh library
+trimesh>=4.0.0
+
+# SVG parsing
+svgpathtools>=1.6.0
+
+# 2D geometry operations (handles holes and complex shapes)
+shapely>=2.0.0
+
+# Numerical operations
+numpy>=1.24.0
+
+# Additional mesh export formats
+# Note: 3MF export is built into trimesh
+
+# Optional: For visualization (uncomment if you want to preview meshes)
+# pyglet>=2.0.0
