@@ -12,6 +12,9 @@ shapely>=2.0.0
 # Numerical operations
 numpy>=1.24.0
 
+# Triangulation engine (required for polygon meshing)
+mapbox-earcut>=1.0.0
+
 # Additional mesh export formats
 # Note: 3MF export is built into trimesh
 
