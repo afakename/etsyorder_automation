@@ -15,8 +15,9 @@ numpy>=1.24.0
 # Triangulation engine (required for polygon meshing)
 mapbox-earcut>=1.0.0
 
-# Additional mesh export formats
-networkx>=3.0  # Required for 3MF export
+# Additional mesh export formats (for 3MF)
+networkx>=3.0
+lxml>=4.9.0
 
 # Optional: For visualization (uncomment if you want to preview meshes)
 # pyglet>=2.0.0
