@@ -16,7 +16,7 @@ numpy>=1.24.0
 mapbox-earcut>=1.0.0
 
 # Additional mesh export formats
-# Note: 3MF export is built into trimesh
+networkx>=3.0  # Required for 3MF export
 
 # Optional: For visualization (uncomment if you want to preview meshes)
 # pyglet>=2.0.0
