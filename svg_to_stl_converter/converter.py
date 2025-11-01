@@ -133,7 +133,7 @@ def parse_svg_to_shapes(svg_file):
 def merge_and_handle_holes(polygons):
     """
     Merge overlapping polygons and handle holes properly.
-    Uses unary_union to automatically handle complex overlaps and holes.
+    Detects which polygons are holes (inside other polygons) and subtracts them.
 
     Returns:
         MultiPolygon or Polygon: Unified geometry with holes preserved
@@ -143,8 +143,58 @@ def merge_and_handle_holes(polygons):
     if not polygons:
         raise ValueError("No valid polygons found in SVG")
 
-    # Union all polygons - this handles overlaps and holes automatically
-    unified = unary_union(polygons)
+    # Sort polygons by area (largest first)
+    sorted_polys = sorted(polygons, key=lambda p: p.area, reverse=True)
+
+    # Separate into outer shapes and potential holes
+    outer_shapes = []
+    potential_holes = []
+
+    for i, poly in enumerate(sorted_polys):
+        # Check if this polygon is contained within any larger polygon
+        is_hole = False
+        for j in range(i):
+            if sorted_polys[j].contains(poly):
+                # This polygon is inside a larger one - it's a hole
+                is_hole = True
+                break
+
+        if is_hole:
+            potential_holes.append(poly)
+        else:
+            outer_shapes.append(poly)
+
+    print(f"  Found {len(outer_shapes)} outer shape(s) and {len(potential_holes)} potential hole(s)")
+
+    # Build shapes with their holes
+    result_shapes = []
+
+    for outer in outer_shapes:
+        # Find all holes that belong to this outer shape
+        holes_for_this_shape = []
+
+        for hole in potential_holes:
+            if outer.contains(hole):
+                holes_for_this_shape.append(hole)
+
+        # Subtract holes from the outer shape
+        shape_with_holes = outer
+        for hole in holes_for_this_shape:
+            try:
+                shape_with_holes = shape_with_holes.difference(hole)
+            except Exception as e:
+                print(f"  ⚠️  Warning: Could not subtract hole: {e}")
+
+        if shape_with_holes.is_valid and not shape_with_holes.is_empty:
+            result_shapes.append(shape_with_holes)
+
+    # Combine all shapes
+    if len(result_shapes) == 1:
+        unified = result_shapes[0]
+    elif len(result_shapes) > 1:
+        unified = unary_union(result_shapes)
+    else:
+        raise ValueError("No valid shapes after hole processing")
 
     # Ensure we have valid geometry
     if not unified.is_valid:
