@@ -369,17 +369,22 @@ def main():
     if len(sys.argv) < 2:
         print("Usage: python converter.py <input.svg> [options]")
         print("\nOptions:")
-        print("  --output-dir DIR    Save output files to specified directory")
+        print("  --output-dir DIR    Save both STL and 3MF to same directory")
+        print("  --stl-dir DIR       Save STL files to specified directory")
+        print("  --3mf-dir DIR       Save 3MF files to specified directory")
         print("  output.stl          Specify STL output path")
         print("  output.3mf          Specify 3MF output path")
         print("\nExamples:")
         print("  python converter.py design.svg")
         print("  python converter.py design.svg --output-dir /path/to/output")
+        print("  python converter.py design.svg --stl-dir /path/stl --3mf-dir /path/3mf")
         print("  python converter.py design.svg output.stl output.3mf")
         sys.exit(1)
 
     svg_file = sys.argv[1]
     output_dir = None
+    stl_dir = None
+    mf3_dir = None
     output_stl = None
     output_3mf = None
 
@@ -389,6 +394,12 @@ def main():
     while i < len(sys.argv):
         if sys.argv[i] == '--output-dir' and i + 1 < len(sys.argv):
             output_dir = sys.argv[i + 1]
+            i += 2
+        elif sys.argv[i] == '--stl-dir' and i + 1 < len(sys.argv):
+            stl_dir = sys.argv[i + 1]
+            i += 2
+        elif sys.argv[i] == '--3mf-dir' and i + 1 < len(sys.argv):
+            mf3_dir = sys.argv[i + 1]
             i += 2
         else:
             args_remaining.append(sys.argv[i])
@@ -400,9 +411,25 @@ def main():
     if len(args_remaining) > 1:
         output_3mf = args_remaining[1]
 
-    # Handle output directory
+    # Handle output directories
     svg_path = Path(svg_file)
-    if output_dir:
+
+    # If specific STL/3MF dirs specified, use those
+    if stl_dir or mf3_dir:
+        if stl_dir:
+            stl_dir_path = Path(stl_dir)
+            stl_dir_path.mkdir(parents=True, exist_ok=True)
+            if output_stl is None:
+                output_stl = stl_dir_path / svg_path.with_suffix('.stl').name
+
+        if mf3_dir:
+            mf3_dir_path = Path(mf3_dir)
+            mf3_dir_path.mkdir(parents=True, exist_ok=True)
+            if output_3mf is None:
+                output_3mf = mf3_dir_path / svg_path.with_suffix('.3mf').name
+
+    # Otherwise use common output-dir if specified
+    elif output_dir:
         output_dir_path = Path(output_dir)
         output_dir_path.mkdir(parents=True, exist_ok=True)
 
