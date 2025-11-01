@@ -293,24 +293,26 @@ def main():
     output_stl = None
     output_3mf = None
 
-    # Parse arguments
+    # Parse arguments - check for options first
+    args_remaining = []
     i = 2
     while i < len(sys.argv):
         if sys.argv[i] == '--output-dir' and i + 1 < len(sys.argv):
             output_dir = sys.argv[i + 1]
             i += 2
-        elif output_stl is None:
-            output_stl = sys.argv[i]
-            i += 1
-        elif output_3mf is None:
-            output_3mf = sys.argv[i]
-            i += 1
         else:
+            args_remaining.append(sys.argv[i])
             i += 1
 
+    # Now parse remaining positional arguments
+    if len(args_remaining) > 0:
+        output_stl = args_remaining[0]
+    if len(args_remaining) > 1:
+        output_3mf = args_remaining[1]
+
     # Handle output directory
+    svg_path = Path(svg_file)
     if output_dir:
-        svg_path = Path(svg_file)
         output_dir_path = Path(output_dir)
         output_dir_path.mkdir(parents=True, exist_ok=True)
 
@@ -318,6 +320,12 @@ def main():
             output_stl = output_dir_path / svg_path.with_suffix('.stl').name
         if output_3mf is None:
             output_3mf = output_dir_path / svg_path.with_suffix('.3mf').name
+
+    # Ensure paths are Path objects if specified
+    if output_stl and not isinstance(output_stl, Path):
+        output_stl = Path(output_stl)
+    if output_3mf and not isinstance(output_3mf, Path):
+        output_3mf = Path(output_3mf)
 
     try:
         convert_svg_to_3d(svg_file, output_stl, output_3mf)
