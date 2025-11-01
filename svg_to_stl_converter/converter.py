@@ -43,14 +43,19 @@ def parse_svg_to_shapes(svg_file):
     paths, attributes, svg_attributes = svg2paths2(svg_file)
 
     # Get SVG viewBox or width/height
+    # Handle different unit types (pt, px, mm, etc)
     viewbox = svg_attributes.get('viewBox', None)
     if viewbox:
         parts = viewbox.split()
         svg_width = float(parts[2])
         svg_height = float(parts[3])
     else:
-        svg_width = float(svg_attributes.get('width', '100').replace('px', ''))
-        svg_height = float(svg_attributes.get('height', '100').replace('px', ''))
+        width_str = svg_attributes.get('width', '100')
+        height_str = svg_attributes.get('height', '100')
+
+        # Remove unit suffixes and convert
+        svg_width = float(width_str.replace('pt', '').replace('px', '').replace('mm', ''))
+        svg_height = float(height_str.replace('pt', '').replace('px', '').replace('mm', ''))
 
     print(f"  SVG dimensions: {svg_width:.2f} x {svg_height:.2f}")
 
@@ -61,8 +66,9 @@ def parse_svg_to_shapes(svg_file):
             continue
 
         # Convert path to polygon points
+        # For intricate designs, we need MUCH denser sampling
         points = []
-        num_samples = max(50, len(path) * 20)  # Sample curves densely for accuracy
+        num_samples = max(100, len(path) * 50)  # Increased sampling density
 
         for i in range(num_samples):
             t = i / (num_samples - 1)
