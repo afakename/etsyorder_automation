@@ -65,34 +65,68 @@ def parse_svg_to_shapes(svg_file):
         if len(path) == 0:
             continue
 
-        # Convert path to polygon points
-        # For intricate designs, we need MUCH denser sampling
-        points = []
-        num_samples = max(100, len(path) * 50)  # Increased sampling density
+        # Check if path is continuous (single shape) or compound (multiple sub-paths)
+        is_continuous = path.iscontinuous()
 
-        for i in range(num_samples):
-            t = i / (num_samples - 1)
-            point = path.point(t)
-            points.append((point.real, point.imag))
+        if is_continuous:
+            # Single continuous path - process normally
+            sub_paths = [path]
+        else:
+            # Compound path with discontinuities - split into sub-paths
+            sub_paths = []
+            current_subpath = []
 
-        if len(points) < 3:
-            continue
+            for i, segment in enumerate(path):
+                current_subpath.append(segment)
 
-        try:
-            # Create polygon
-            poly = Polygon(points)
+                # Check if next segment is disconnected
+                if i < len(path) - 1:
+                    if abs(segment.end - path[i + 1].start) > 0.01:
+                        # Discontinuity detected - save current sub-path
+                        from svgpathtools import Path as SvgPath
+                        sub_paths.append(SvgPath(*current_subpath))
+                        current_subpath = []
 
-            # Fix invalid geometries
-            if not poly.is_valid:
-                poly = poly.buffer(0)
+            # Don't forget the last sub-path
+            if current_subpath:
+                from svgpathtools import Path as SvgPath
+                sub_paths.append(SvgPath(*current_subpath))
 
-            if poly.is_valid and not poly.is_empty:
-                all_polygons.append(poly)
-        except Exception as e:
-            print(f"  ⚠️  Warning: Could not process path {path_idx}: {e}")
-            continue
+        print(f"  Path {path_idx}: {len(sub_paths)} sub-path(s) with {len(path)} total segments")
 
-    print(f"  ✓ Extracted {len(all_polygons)} shapes")
+        # Convert each sub-path to a polygon
+        for sub_idx, sub_path in enumerate(sub_paths):
+            if len(sub_path) == 0:
+                continue
+
+            # Sample the sub-path densely for intricate details
+            points = []
+            # Adaptive sampling: more samples for more segments
+            num_samples = max(100, len(sub_path) * 30)
+
+            for i in range(num_samples):
+                t = i / (num_samples - 1)
+                point = sub_path.point(t)
+                points.append((point.real, point.imag))
+
+            if len(points) < 3:
+                continue
+
+            try:
+                # Create polygon from points
+                poly = Polygon(points)
+
+                # Fix invalid geometries
+                if not poly.is_valid:
+                    poly = poly.buffer(0)
+
+                if poly.is_valid and not poly.is_empty:
+                    all_polygons.append(poly)
+            except Exception as e:
+                print(f"  ⚠️  Warning: Could not process sub-path {sub_idx} of path {path_idx}: {e}")
+                continue
+
+    print(f"  ✓ Extracted {len(all_polygons)} shape(s)")
     return all_polygons, svg_width, svg_height
 
 
