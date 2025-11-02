@@ -309,6 +309,33 @@ def polygon_to_3d_mesh(geometry):
     return final_mesh
 
 
+def get_unique_filename(filepath):
+    """
+    Generate a unique filename by adding (1), (2), etc. if file exists.
+
+    Args:
+        filepath: Path object for the desired output file
+
+    Returns:
+        Path object with unique filename
+    """
+    if not filepath.exists():
+        return filepath
+
+    # File exists, add sequential number
+    base_path = filepath.parent
+    stem = filepath.stem
+    suffix = filepath.suffix
+
+    counter = 1
+    while True:
+        new_name = f"{stem} ({counter}){suffix}"
+        new_path = base_path / new_name
+        if not new_path.exists():
+            return new_path
+        counter += 1
+
+
 def convert_svg_to_3d(svg_file, output_stl=None, output_3mf=None):
     """
     Main conversion function.
@@ -331,6 +358,14 @@ def convert_svg_to_3d(svg_file, output_stl=None, output_3mf=None):
         output_stl = svg_path.with_suffix('.stl')
     if output_3mf is None:
         output_3mf = svg_path.with_suffix('.3mf')
+
+    # Ensure paths are Path objects
+    output_stl = Path(output_stl)
+    output_3mf = Path(output_3mf)
+
+    # Check for existing files and add sequential numbers if needed
+    output_stl = get_unique_filename(output_stl)
+    output_3mf = get_unique_filename(output_3mf)
 
     print(f"\n{'='*60}")
     print(f"SVG to 3D Converter")
