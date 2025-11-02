@@ -24,10 +24,11 @@ class FilenameGenerator:
 
     def smart_capitalize_name(self, name):
         """
-        Intelligently capitalize names and remove spaces:
+        Intelligently capitalize names, remove spaces and punctuation:
         - Convert ALL CAPS to title case (JESUS -> Jesus, LILY MAE -> LilyMae)
         - Preserve mixed case names (McCarthy, DrAdams, MacQueen)
         - Remove all spaces (Lily Mae -> LilyMae, Phil Linda -> PhilLinda)
+        - Remove punctuation (Dr. Marshall -> DrMarshall, Baby M. -> BabyM)
         """
         # If the name is empty or None, return it as-is
         if not name or not name.strip():
@@ -40,6 +41,9 @@ class FilenameGenerator:
         if name.isupper() and any(c.isalpha() for c in name):
             # Convert to title case
             name = name.title()
+
+        # Remove all punctuation (periods, commas, apostrophes, etc.)
+        name = re.sub(r'[^\w\s]', '', name)
 
         # Remove all spaces from the name
         name = name.replace(' ', '')

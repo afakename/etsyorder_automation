@@ -148,10 +148,12 @@ class EtsyAutomation:
         }
     
     def extract_personalization(self, variations_list):
-        """Extract personalization text from variations"""
+        """Extract and clean personalization text from variations"""
         for var in variations_list:
             if var.get('formatted_name') == 'Personalization':
-                return var.get('formatted_value', '')
+                raw_value = var.get('formatted_value', '')
+                # Clean the personalization using the same logic as filename generation
+                return self.filename_generator.smart_capitalize_name(raw_value)
         return ''
     
     def format_price(self, price_data):
