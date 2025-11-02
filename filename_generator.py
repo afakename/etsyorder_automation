@@ -22,6 +22,30 @@ class FilenameGenerator:
         """Get the current year dynamically"""
         return str(datetime.now().year)
     
+    def smart_capitalize_name(self, name):
+        """
+        Intelligently capitalize names and remove spaces:
+        - Convert ALL CAPS to title case (JESUS -> Jesus, LILY MAE -> LilyMae)
+        - Preserve mixed case names (McCarthy, DrAdams, MacQueen)
+        - Remove all spaces (Lily Mae -> LilyMae, Phil Linda -> PhilLinda)
+        """
+        # If the name is empty or None, return it as-is
+        if not name or not name.strip():
+            return name
+
+        name = name.strip()
+
+        # Check if name is ALL CAPS (all letters are uppercase)
+        # We check if it's all uppercase AND has at least one letter
+        if name.isupper() and any(c.isalpha() for c in name):
+            # Convert to title case
+            name = name.title()
+
+        # Remove all spaces from the name
+        name = name.replace(' ', '')
+
+        return name
+    
     def generate_filename(self, transaction):
         """Generate filename from transaction data"""
         sku = transaction.get('sku', '')
@@ -32,7 +56,10 @@ class FilenameGenerator:
         
         # Extract variation data
         variations = self.extract_variations(transaction.get('variations', []))
-        name = variations.get('Personalization', 'Unknown')
+        name_raw = variations.get('Personalization', 'Unknown')
+        
+        # Apply smart capitalization and space removal
+        name = self.smart_capitalize_name(name_raw)
         
         product_info = self.sku_mapping[sku]
         
@@ -128,4 +155,4 @@ class FilenameGenerator:
         elif any(term in design_lower for term in ['flake', 'flk']):
             return 'Flk'
         else:
-            return design_raw  # Return as-is if unknown
+            return design_raw
