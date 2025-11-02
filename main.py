@@ -104,16 +104,15 @@ class EtsyAutomation:
         """Normalize filename for comparison - handles case variations and spelling variations"""
         # Convert to lowercase and normalize common variations
         normalized = filename.lower()
-
-        # Remove ALL spaces for comparison (handles both old "Evynn star" and new "EvynnStar" formats)
-        normalized = normalized.replace(' ', '')
-
+        # Standardize spacing
+        normalized = ' '.join(normalized.split())
+        
         # Standardize flake/flk variations to 'flk'
         normalized = normalized.replace('flake', 'flk')
-
+        
         # Additional normalizations if needed in the future
         # normalized = normalized.replace('star', 'str') # example
-
+        
         return normalized
     
     def run(self):
