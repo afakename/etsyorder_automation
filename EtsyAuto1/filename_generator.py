@@ -1,10 +1,12 @@
 # filename_generator.py
+from datetime import datetime
 from logger import setup_logger
+import re
 
 class FilenameGenerator:
     def __init__(self, logger=None):
         self.logger = logger or setup_logger("filename_generator")
-        
+
         self.sku_mapping = {
             "PerSnoFlkOrn-MS-01": {"type": "MS", "format": "{name} Ms {design} {year}"},
             "PerSnoFlkOrn-MS-02": {"type": "MS", "format": "{name} Ms {design} {year}"},
@@ -15,13 +17,17 @@ class FilenameGenerator:
             "PerSnoFlkOrn-RR-05": {"type": "RR", "format": "{name} {year_or_star}"},
             "PerSnoFlkOrn-RR-06": {"type": "RR", "format": "{name} {year_or_star}"},
         }
-    
+
+    def get_current_year(self):
+        """Get the current year dynamically"""
+        return str(datetime.now().year)
+
     def smart_capitalize_name(self, name):
         """
         Intelligently capitalize names and remove spaces:
         - Convert ALL CAPS to title case (JESUS -> Jesus, LILY MAE -> LilyMae)
         - Preserve mixed case names (McCarthy, DrAdams, MacQueen)
-        - Remove all spaces (Lily Mae -> LilyMae)
+        - Remove all spaces (Lily Mae -> LilyMae, Phil Linda -> PhilLinda)
         """
         # If the name is empty or None, return it as-is
         if not name or not name.strip():
@@ -52,7 +58,7 @@ class FilenameGenerator:
         variations = self.extract_variations(transaction.get('variations', []))
         name_raw = variations.get('Personalization', 'Unknown')
 
-        # Apply smart capitalization
+        # Apply smart capitalization and space removal
         name = self.smart_capitalize_name(name_raw)
 
         product_info = self.sku_mapping[sku]
@@ -61,7 +67,7 @@ class FilenameGenerator:
             return self.generate_ms_filename(name, variations)
         else:
             return self.generate_regular_filename(name, variations)
-    
+
     def extract_variations(self, variations_list):
         """Extract variation data into a clean dict"""
         variations = {}
@@ -70,45 +76,80 @@ class FilenameGenerator:
             formatted_value = var.get('formatted_value', '')
             variations[formatted_name] = formatted_value
         return variations
-    
+
     def generate_ms_filename(self, name, variations):
-        """Generate MS ornament filename: {Name} Ms {Design} {Year}"""
-        design_raw = variations.get('Choose the Center Piece', 'Star')
-        year_raw = variations.get('Year or No Year', '')
-        
-        # Normalize design
-        design = self.normalize_design(design_raw)
-        
-        # Handle year
-        year = '' if year_raw.lower() in ['no year', ''] else year_raw
-        
+        """
+        Generate MS ornament filename: {Name} Ms {Design} {Year}
+        Handles "Choose the Center Piece" variation which can be:
+        - "Star"
+        - "Flake"
+        - "Current Year"
+        - "Flake w/Current Year"
+        - "Star w/2024" (or other specific year)
+        - "Flake w/2024" (or other specific year)
+        """
+        center_piece = variations.get('Choose the Center Piece', 'Star')
+
+        # Parse the center piece selection
+        center_lower = center_piece.lower()
+
+        # Determine design and year from center piece
+        if 'flake' in center_lower or 'flk' in center_lower:
+            design = 'Flk'
+        else:
+            design = 'Star'
+
+        # Determine year
+        if 'current year' in center_lower:
+            year = self.get_current_year()
+        elif re.search(r'\d{4}', center_piece):
+            # Extract explicit year like "2024"
+            year_match = re.search(r'\d{4}', center_piece)
+            year = year_match.group(0)
+        else:
+            year = ''
+
         # Build filename
         parts = [name, 'Ms', design]
         if year:
             parts.append(str(year))
-        
+
         filename = ' '.join(parts)
-        self.logger.info(f"Generated MS filename: {filename}")
+        self.logger.info(f"Generated MS filename: {filename} (from center piece: '{center_piece}')")
         return filename
-    
+
     def generate_regular_filename(self, name, variations):
-        """Generate regular ornament filename: {Name} {Year or Star}"""
-        year_or_star_raw = variations.get('Current Year or Star Design', 'Star')
-        
-        # Normalize the year/star value
-        if 'star' in year_or_star_raw.lower():
+        """
+        Generate RR ornament filename: {Name} {Year or Star}
+        Handles "Choose the Center Piece" variation which can be:
+        - "Star Design"
+        - "Current Year"
+        - Specific year like "2024"
+        """
+        center_piece = variations.get('Choose the Center Piece', 'Star')
+        center_lower = center_piece.lower()
+
+        # Handle dynamic year for RR variants
+        if 'current year' in center_lower:
+            year_or_star = self.get_current_year()
+        elif 'star' in center_lower:
             year_or_star = 'Star'
+        elif re.search(r'\d{4}', center_piece):
+            # Extract explicit year
+            year_match = re.search(r'\d{4}', center_piece)
+            year_or_star = year_match.group(0)
         else:
-            year_or_star = year_or_star_raw
-        
+            # Default to star if unclear
+            year_or_star = 'Star'
+
         filename = f"{name} {year_or_star}"
-        self.logger.info(f"Generated regular filename: {filename}")
+        self.logger.info(f"Generated RR filename: {filename} (from center piece: '{center_piece}')")
         return filename
-    
+
     def normalize_design(self, design_raw):
         """Normalize design variations to standard format"""
         design_lower = design_raw.lower()
-        
+
         if 'star' in design_lower:
             return 'Star'
         elif any(term in design_lower for term in ['flake', 'flk']):
