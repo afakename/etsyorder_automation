@@ -92,11 +92,17 @@ class FilenameGenerator:
         - "Star w/2024" (or other specific year)
         - "Flake w/2024" (or other specific year)
         """
-        center_piece = variations.get('Choose the Center Piece', 'Star')
+        center_piece = variations.get('Choose the Center Piece', None)
 
         # DEBUG: Log what we received
+        self.logger.info(f"DEBUG - MS Name: '{name}'")
         self.logger.info(f"DEBUG - Center Piece value: '{center_piece}'")
         self.logger.info(f"DEBUG - All variations: {variations}")
+
+        # If no center piece found, log warning and default to Star
+        if center_piece is None:
+            self.logger.warning(f"No 'Choose the Center Piece' variation found for {name}, defaulting to Star")
+            center_piece = 'Star'
 
         # Parse the center piece selection
         center_lower = center_piece.lower()
@@ -134,11 +140,17 @@ class FilenameGenerator:
         - "Current Year"
         - Specific year like "2024"
         """
-        center_piece = variations.get('Choose the Center Piece', 'Star')
+        center_piece = variations.get('Choose the Center Piece', None)
 
         # DEBUG: Log what we received
+        self.logger.info(f"DEBUG - RR Name: '{name}'")
         self.logger.info(f"DEBUG - RR Center Piece value: '{center_piece}'")
         self.logger.info(f"DEBUG - RR All variations: {variations}")
+
+        # If no center piece found, log warning and default to Star
+        if center_piece is None:
+            self.logger.warning(f"No 'Choose the Center Piece' variation found for {name}, defaulting to Star")
+            center_piece = 'Star'
 
         center_lower = center_piece.lower()
 
