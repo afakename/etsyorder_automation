@@ -107,44 +107,58 @@ class EtsyAutomation:
         all_orders = []
         needs_made = []
         file_locations = []
-        
+        needs_updated = []
+
         for order in orders:
             customer_name = order.get('name', 'Unknown Customer')
             order_id = order.get('receipt_id', 'Unknown')
-            
+
             for transaction in order.get('transactions', []):
                 # Generate filename
                 filename = self.filename_generator.generate_filename(transaction)
-                
+
                 if not filename:
                     continue
-                
-                # Check if file exists
+
+                # Check if exact file exists
                 file_path = self.file_database.find_file(filename)
-                
+
+                # If no exact match, check for similar file (different year/star)
+                similar_file_path = None
+                if not file_path:
+                    similar_file_path = self.file_database.find_similar_file(filename)
+
                 order_data = {
                     'order_id': order_id,
                     'customer_name': customer_name,
                     'sku': transaction.get('sku', ''),
                     'generated_filename': filename,
                     'file_exists': file_path is not None,
-                    'file_path': str(file_path) if file_path else 'NOT FOUND',
+                    'file_path': str(file_path) if file_path else (str(similar_file_path) if similar_file_path else 'NOT FOUND'),
                     'quantity': transaction.get('quantity', 1),
                     'price': self.format_price(transaction.get('price', {})),
                     'personalization': self.extract_personalization(transaction.get('variations', []))
                 }
-                
+
                 all_orders.append(order_data)
-                
-                if not file_path:
-                    needs_made.append(order_data)
-                else:
+
+                # Categorize the order
+                if file_path:
+                    # Exact match found - already made
                     file_locations.append(order_data)
-        
+                elif similar_file_path:
+                    # Similar file found (different year/star) - needs updated
+                    order_data['old_file'] = str(similar_file_path)
+                    needs_updated.append(order_data)
+                else:
+                    # No file found at all - needs made
+                    needs_made.append(order_data)
+
         return {
             'all_orders': all_orders,
             'needs_made': needs_made,
-            'file_locations': file_locations
+            'file_locations': file_locations,
+            'needs_updated': needs_updated
         }
     
     def extract_personalization(self, variations_list):
@@ -176,12 +190,17 @@ class EtsyAutomation:
             if results['all_orders']:
                 df_all = pd.DataFrame(results['all_orders'])
                 df_all.to_excel(writer, sheet_name='All Orders', index=False)
-            
+
             # Needs Made sheet
             if results['needs_made']:
                 df_needs = pd.DataFrame(results['needs_made'])
                 df_needs.to_excel(writer, sheet_name='Needs Made', index=False)
-            
+
+            # Needs Updated sheet (same name, different year/star)
+            if results['needs_updated']:
+                df_updated = pd.DataFrame(results['needs_updated'])
+                df_updated.to_excel(writer, sheet_name='Needs Updated', index=False)
+
             # File Locations sheet
             if results['file_locations']:
                 df_files = pd.DataFrame(results['file_locations'])
