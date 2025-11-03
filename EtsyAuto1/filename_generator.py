@@ -142,13 +142,20 @@ class FilenameGenerator:
         """
         center_piece = variations.get('Choose the Center Piece', None)
 
-        # DEBUG: Log what we received
+        # DEBUG: Log what we received (both to log and console)
+        print(f"\n=== RR PROCESSING ===")
+        print(f"Name: '{name}'")
+        print(f"Center Piece variation: '{center_piece}'")
+        print(f"All variations: {variations}")
+        print(f"===================\n")
+
         self.logger.info(f"DEBUG - RR Name: '{name}'")
         self.logger.info(f"DEBUG - RR Center Piece value: '{center_piece}'")
         self.logger.info(f"DEBUG - RR All variations: {variations}")
 
         # If no center piece found, log warning and default to Star
         if center_piece is None:
+            print(f"⚠️  WARNING: No 'Choose the Center Piece' variation found for {name}, defaulting to Star")
             self.logger.warning(f"No 'Choose the Center Piece' variation found for {name}, defaulting to Star")
             center_piece = 'Star'
 
