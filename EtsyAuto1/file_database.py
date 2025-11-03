@@ -50,15 +50,33 @@ class FileDatabase:
         # Direct match first
         if target_filename.lower() in self.file_index:
             return self.file_index[target_filename.lower()]
-        
+
         # Fuzzy matching
         matches = self.fuzzy_search(target_filename)
-        
+
         if matches:
             self.logger.info(f"Found fuzzy match for '{target_filename}': {matches[0].name}")
             return matches[0]
-        
+
         self.logger.warning(f"No file found for: {target_filename}")
+        return None
+
+    def find_similar_file(self, target_filename):
+        """Find a file with same name but different year/star - for 'Needs Updated' detection"""
+        target_parts = self.extract_filename_parts(target_filename)
+
+        for indexed_filename, file_path in self.file_index.items():
+            indexed_parts = self.extract_filename_parts(indexed_filename)
+
+            # Check if same name and design type, but different year/star
+            if (target_parts['name'] == indexed_parts['name'] and
+                target_parts['has_ms'] == indexed_parts['has_ms'] and
+                target_parts['design'] == indexed_parts['design'] and
+                target_parts['year'] != indexed_parts['year']):
+
+                self.logger.info(f"Found similar file for '{target_filename}': {file_path.name} (different year/star)")
+                return file_path
+
         return None
     
     def fuzzy_search(self, target_filename):
