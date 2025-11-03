@@ -43,14 +43,19 @@ def parse_svg_to_shapes(svg_file):
     paths, attributes, svg_attributes = svg2paths2(svg_file)
 
     # Get SVG viewBox or width/height
+    # Handle different unit types (pt, px, mm, etc)
     viewbox = svg_attributes.get('viewBox', None)
     if viewbox:
         parts = viewbox.split()
         svg_width = float(parts[2])
         svg_height = float(parts[3])
     else:
-        svg_width = float(svg_attributes.get('width', '100').replace('px', ''))
-        svg_height = float(svg_attributes.get('height', '100').replace('px', ''))
+        width_str = svg_attributes.get('width', '100')
+        height_str = svg_attributes.get('height', '100')
+
+        # Remove unit suffixes and convert
+        svg_width = float(width_str.replace('pt', '').replace('px', '').replace('mm', ''))
+        svg_height = float(height_str.replace('pt', '').replace('px', '').replace('mm', ''))
 
     print(f"  SVG dimensions: {svg_width:.2f} x {svg_height:.2f}")
 
@@ -60,40 +65,75 @@ def parse_svg_to_shapes(svg_file):
         if len(path) == 0:
             continue
 
-        # Convert path to polygon points
-        points = []
-        num_samples = max(50, len(path) * 20)  # Sample curves densely for accuracy
+        # Check if path is continuous (single shape) or compound (multiple sub-paths)
+        is_continuous = path.iscontinuous()
 
-        for i in range(num_samples):
-            t = i / (num_samples - 1)
-            point = path.point(t)
-            points.append((point.real, point.imag))
+        if is_continuous:
+            # Single continuous path - process normally
+            sub_paths = [path]
+        else:
+            # Compound path with discontinuities - split into sub-paths
+            sub_paths = []
+            current_subpath = []
 
-        if len(points) < 3:
-            continue
+            for i, segment in enumerate(path):
+                current_subpath.append(segment)
 
-        try:
-            # Create polygon
-            poly = Polygon(points)
+                # Check if next segment is disconnected
+                if i < len(path) - 1:
+                    if abs(segment.end - path[i + 1].start) > 0.01:
+                        # Discontinuity detected - save current sub-path
+                        from svgpathtools import Path as SvgPath
+                        sub_paths.append(SvgPath(*current_subpath))
+                        current_subpath = []
 
-            # Fix invalid geometries
-            if not poly.is_valid:
-                poly = poly.buffer(0)
+            # Don't forget the last sub-path
+            if current_subpath:
+                from svgpathtools import Path as SvgPath
+                sub_paths.append(SvgPath(*current_subpath))
 
-            if poly.is_valid and not poly.is_empty:
-                all_polygons.append(poly)
-        except Exception as e:
-            print(f"  ⚠️  Warning: Could not process path {path_idx}: {e}")
-            continue
+        print(f"  Path {path_idx}: {len(sub_paths)} sub-path(s) with {len(path)} total segments")
 
-    print(f"  ✓ Extracted {len(all_polygons)} shapes")
+        # Convert each sub-path to a polygon
+        for sub_idx, sub_path in enumerate(sub_paths):
+            if len(sub_path) == 0:
+                continue
+
+            # Sample the sub-path densely for intricate details
+            points = []
+            # Adaptive sampling: more samples for more segments
+            num_samples = max(100, len(sub_path) * 30)
+
+            for i in range(num_samples):
+                t = i / (num_samples - 1)
+                point = sub_path.point(t)
+                points.append((point.real, point.imag))
+
+            if len(points) < 3:
+                continue
+
+            try:
+                # Create polygon from points
+                poly = Polygon(points)
+
+                # Fix invalid geometries
+                if not poly.is_valid:
+                    poly = poly.buffer(0)
+
+                if poly.is_valid and not poly.is_empty:
+                    all_polygons.append(poly)
+            except Exception as e:
+                print(f"  ⚠️  Warning: Could not process sub-path {sub_idx} of path {path_idx}: {e}")
+                continue
+
+    print(f"  ✓ Extracted {len(all_polygons)} shape(s)")
     return all_polygons, svg_width, svg_height
 
 
 def merge_and_handle_holes(polygons):
     """
     Merge overlapping polygons and handle holes properly.
-    Uses unary_union to automatically handle complex overlaps and holes.
+    Detects which polygons are holes (inside other polygons) and subtracts them.
 
     Returns:
         MultiPolygon or Polygon: Unified geometry with holes preserved
@@ -103,8 +143,58 @@ def merge_and_handle_holes(polygons):
     if not polygons:
         raise ValueError("No valid polygons found in SVG")
 
-    # Union all polygons - this handles overlaps and holes automatically
-    unified = unary_union(polygons)
+    # Sort polygons by area (largest first)
+    sorted_polys = sorted(polygons, key=lambda p: p.area, reverse=True)
+
+    # Separate into outer shapes and potential holes
+    outer_shapes = []
+    potential_holes = []
+
+    for i, poly in enumerate(sorted_polys):
+        # Check if this polygon is contained within any larger polygon
+        is_hole = False
+        for j in range(i):
+            if sorted_polys[j].contains(poly):
+                # This polygon is inside a larger one - it's a hole
+                is_hole = True
+                break
+
+        if is_hole:
+            potential_holes.append(poly)
+        else:
+            outer_shapes.append(poly)
+
+    print(f"  Found {len(outer_shapes)} outer shape(s) and {len(potential_holes)} potential hole(s)")
+
+    # Build shapes with their holes
+    result_shapes = []
+
+    for outer in outer_shapes:
+        # Find all holes that belong to this outer shape
+        holes_for_this_shape = []
+
+        for hole in potential_holes:
+            if outer.contains(hole):
+                holes_for_this_shape.append(hole)
+
+        # Subtract holes from the outer shape
+        shape_with_holes = outer
+        for hole in holes_for_this_shape:
+            try:
+                shape_with_holes = shape_with_holes.difference(hole)
+            except Exception as e:
+                print(f"  ⚠️  Warning: Could not subtract hole: {e}")
+
+        if shape_with_holes.is_valid and not shape_with_holes.is_empty:
+            result_shapes.append(shape_with_holes)
+
+    # Combine all shapes
+    if len(result_shapes) == 1:
+        unified = result_shapes[0]
+    elif len(result_shapes) > 1:
+        unified = unary_union(result_shapes)
+    else:
+        raise ValueError("No valid shapes after hole processing")
 
     # Ensure we have valid geometry
     if not unified.is_valid:
@@ -128,15 +218,22 @@ def scale_to_target_size(geometry, original_width, original_height):
     """
     print(f"📏 Scaling to target dimensions...")
 
-    # Determine which side is longest
-    longest_original = max(original_width, original_height)
-    scale_factor = TARGET_LONGEST_SIDE_MM / longest_original
+    # Get actual geometry bounds (this is more reliable than SVG attributes)
+    bounds = geometry.bounds  # (minx, miny, maxx, maxy)
+    actual_width = bounds[2] - bounds[0]
+    actual_height = bounds[3] - bounds[1]
+
+    print(f"  SVG reported: {original_width:.2f} x {original_height:.2f}")
+    print(f"  Actual geometry: {actual_width:.2f} x {actual_height:.2f}")
+
+    # Determine which side is longest (use actual geometry bounds)
+    longest_actual = max(actual_width, actual_height)
+    scale_factor = TARGET_LONGEST_SIDE_MM / longest_actual
 
     # Calculate final dimensions
-    final_width = original_width * scale_factor
-    final_height = original_height * scale_factor
+    final_width = actual_width * scale_factor
+    final_height = actual_height * scale_factor
 
-    print(f"  Original: {original_width:.2f} x {original_height:.2f}")
     print(f"  Scale factor: {scale_factor:.4f}")
     print(f"  Final: {final_width:.2f}mm x {final_height:.2f}mm x {EXTRUSION_DEPTH_MM}mm")
 
@@ -212,6 +309,33 @@ def polygon_to_3d_mesh(geometry):
     return final_mesh
 
 
+def get_unique_filename(filepath):
+    """
+    Generate a unique filename by adding (1), (2), etc. if file exists.
+
+    Args:
+        filepath: Path object for the desired output file
+
+    Returns:
+        Path object with unique filename
+    """
+    if not filepath.exists():
+        return filepath
+
+    # File exists, add sequential number
+    base_path = filepath.parent
+    stem = filepath.stem
+    suffix = filepath.suffix
+
+    counter = 1
+    while True:
+        new_name = f"{stem} ({counter}){suffix}"
+        new_path = base_path / new_name
+        if not new_path.exists():
+            return new_path
+        counter += 1
+
+
 def convert_svg_to_3d(svg_file, output_stl=None, output_3mf=None):
     """
     Main conversion function.
@@ -234,6 +358,14 @@ def convert_svg_to_3d(svg_file, output_stl=None, output_3mf=None):
         output_stl = svg_path.with_suffix('.stl')
     if output_3mf is None:
         output_3mf = svg_path.with_suffix('.3mf')
+
+    # Ensure paths are Path objects
+    output_stl = Path(output_stl)
+    output_3mf = Path(output_3mf)
+
+    # Check for existing files and add sequential numbers if needed
+    output_stl = get_unique_filename(output_stl)
+    output_3mf = get_unique_filename(output_3mf)
 
     print(f"\n{'='*60}")
     print(f"SVG to 3D Converter")
@@ -270,15 +402,82 @@ def convert_svg_to_3d(svg_file, output_stl=None, output_3mf=None):
 def main():
     """Command-line interface"""
     if len(sys.argv) < 2:
-        print("Usage: python converter.py <input.svg> [output.stl] [output.3mf]")
-        print("\nExample:")
+        print("Usage: python converter.py <input.svg> [options]")
+        print("\nOptions:")
+        print("  --output-dir DIR    Save both STL and 3MF to same directory")
+        print("  --stl-dir DIR       Save STL files to specified directory")
+        print("  --3mf-dir DIR       Save 3MF files to specified directory")
+        print("  output.stl          Specify STL output path")
+        print("  output.3mf          Specify 3MF output path")
+        print("\nExamples:")
         print("  python converter.py design.svg")
+        print("  python converter.py design.svg --output-dir /path/to/output")
+        print("  python converter.py design.svg --stl-dir /path/stl --3mf-dir /path/3mf")
         print("  python converter.py design.svg output.stl output.3mf")
         sys.exit(1)
 
     svg_file = sys.argv[1]
-    output_stl = sys.argv[2] if len(sys.argv) > 2 else None
-    output_3mf = sys.argv[3] if len(sys.argv) > 3 else None
+    output_dir = None
+    stl_dir = None
+    mf3_dir = None
+    output_stl = None
+    output_3mf = None
+
+    # Parse arguments - check for options first
+    args_remaining = []
+    i = 2
+    while i < len(sys.argv):
+        if sys.argv[i] == '--output-dir' and i + 1 < len(sys.argv):
+            output_dir = sys.argv[i + 1]
+            i += 2
+        elif sys.argv[i] == '--stl-dir' and i + 1 < len(sys.argv):
+            stl_dir = sys.argv[i + 1]
+            i += 2
+        elif sys.argv[i] == '--3mf-dir' and i + 1 < len(sys.argv):
+            mf3_dir = sys.argv[i + 1]
+            i += 2
+        else:
+            args_remaining.append(sys.argv[i])
+            i += 1
+
+    # Now parse remaining positional arguments
+    if len(args_remaining) > 0:
+        output_stl = args_remaining[0]
+    if len(args_remaining) > 1:
+        output_3mf = args_remaining[1]
+
+    # Handle output directories
+    svg_path = Path(svg_file)
+
+    # If specific STL/3MF dirs specified, use those
+    if stl_dir or mf3_dir:
+        if stl_dir:
+            stl_dir_path = Path(stl_dir)
+            stl_dir_path.mkdir(parents=True, exist_ok=True)
+            if output_stl is None:
+                output_stl = stl_dir_path / svg_path.with_suffix('.stl').name
+
+        if mf3_dir:
+            mf3_dir_path = Path(mf3_dir)
+            mf3_dir_path.mkdir(parents=True, exist_ok=True)
+            if output_3mf is None:
+                output_3mf = mf3_dir_path / svg_path.with_suffix('.3mf').name
+
+    # Otherwise use common output-dir if specified
+    elif output_dir:
+        output_dir_path = Path(output_dir)
+        output_dir_path.mkdir(parents=True, exist_ok=True)
+
+        if output_stl is None:
+            output_stl = output_dir_path / svg_path.with_suffix('.stl').name
+        if output_3mf is None:
+            output_3mf = output_dir_path / svg_path.with_suffix('.3mf').name
+
+    # Ensure paths are Path objects if specified
+    if output_stl and not isinstance(output_stl, Path):
+        output_stl = Path(output_stl)
+    if output_3mf and not isinstance(output_3mf, Path):
+        output_3mf = Path(output_3mf)
 
     try:
         convert_svg_to_3d(svg_file, output_stl, output_3mf)
