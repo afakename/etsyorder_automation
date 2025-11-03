@@ -73,12 +73,19 @@ class FilenameGenerator:
             return self.generate_regular_filename(name, variations)
 
     def extract_variations(self, variations_list):
-        """Extract variation data into a clean dict"""
+        """Extract variation data into a clean dict with case-insensitive keys"""
         variations = {}
         for var in variations_list:
             formatted_name = var.get('formatted_name', '')
             formatted_value = var.get('formatted_value', '')
-            variations[formatted_name] = formatted_value
+
+            # Normalize the key to handle Etsy's inconsistent capitalization
+            # "Choose the Center Piece" vs "choose the center piece"
+            if formatted_name.lower() == 'choose the center piece':
+                variations['Choose the Center Piece'] = formatted_value
+            else:
+                variations[formatted_name] = formatted_value
+
         return variations
 
     def generate_ms_filename(self, name, variations):
