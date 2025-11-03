@@ -94,6 +94,10 @@ class FilenameGenerator:
         """
         center_piece = variations.get('Choose the Center Piece', 'Star')
 
+        # DEBUG: Log what we received
+        self.logger.info(f"DEBUG - Center Piece value: '{center_piece}'")
+        self.logger.info(f"DEBUG - All variations: {variations}")
+
         # Parse the center piece selection
         center_lower = center_piece.lower()
 
@@ -131,6 +135,11 @@ class FilenameGenerator:
         - Specific year like "2024"
         """
         center_piece = variations.get('Choose the Center Piece', 'Star')
+
+        # DEBUG: Log what we received
+        self.logger.info(f"DEBUG - RR Center Piece value: '{center_piece}'")
+        self.logger.info(f"DEBUG - RR All variations: {variations}")
+
         center_lower = center_piece.lower()
 
         # Handle dynamic year for RR variants
