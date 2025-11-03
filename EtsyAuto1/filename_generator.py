@@ -113,12 +113,12 @@ class FilenameGenerator:
         else:
             year = ''
 
-        # Build filename
+        # Build filename (no spaces)
         parts = [name, 'Ms', design]
         if year:
             parts.append(str(year))
 
-        filename = ' '.join(parts)
+        filename = ''.join(parts)  # Join without spaces
         self.logger.info(f"Generated MS filename: {filename} (from center piece: '{center_piece}')")
         return filename
 
@@ -146,7 +146,7 @@ class FilenameGenerator:
             # Default to star if unclear
             year_or_star = 'Star'
 
-        filename = f"{name} {year_or_star}"
+        filename = f"{name}{year_or_star}"  # No spaces
         self.logger.info(f"Generated RR filename: {filename} (from center piece: '{center_piece}')")
         return filename
 
