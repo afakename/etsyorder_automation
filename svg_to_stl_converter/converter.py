@@ -353,12 +353,16 @@ def convert_svg_to_3d(svg_file, output_stl=None, output_3mf=None):
     if not svg_path.exists():
         raise FileNotFoundError(f"SVG file not found: {svg_file}")
 
-    # Default output paths
+    # Default output paths - save to dedicated 3D model folders
     if output_stl is None:
-        output_stl = svg_path.with_suffix('.stl')
+        stl_folder = Path("/Users/afakename/DocumentsMac/Snowflake_Database/3D_Models/STL_Files")
+        stl_folder.mkdir(parents=True, exist_ok=True)
+        output_stl = stl_folder / svg_path.with_suffix('.stl').name
     if output_3mf is None:
-        output_3mf = svg_path.with_suffix('.3mf')
-
+        mf3_folder = Path("/Users/afakename/DocumentsMac/Snowflake_Database/3D_Models/3MF_Files")
+        mf3_folder.mkdir(parents=True, exist_ok=True)
+        output_3mf = mf3_folder / svg_path.with_suffix('.3mf').name
+        
     # Ensure paths are Path objects
     output_stl = Path(output_stl)
     output_3mf = Path(output_3mf)

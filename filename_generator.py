@@ -76,15 +76,7 @@ class FilenameGenerator:
             formatted_value = var.get('formatted_value', '')
             variations[formatted_name] = formatted_value
         return variations
-
-    def sanitize_name(self, name):
-        """
-        Remove spaces from personalization names.
-        Example: 'Lily Jean' -> 'LilyJean'
-                 'Phil Linda' -> 'PhilLinda'
-        """
-        return name.replace(' ', '')
-
+    
     def generate_ms_filename(self, name, variations):
         """
         Generate MS ornament filename: {Name} Ms {Design} {Year}
@@ -116,15 +108,12 @@ class FilenameGenerator:
             year = year_match.group(0)
         else:
             year = ''
-
-        # Sanitize name to remove spaces (e.g., "Lily Jean" -> "LilyJean")
-        clean_name = self.sanitize_name(name)
-
+        
         # Build filename
-        parts = [clean_name, 'Ms', design]
+        parts = [name, 'Ms', design]
         if year:
             parts.append(str(year))
-
+        
         filename = ' '.join(parts)
         self.logger.info(f"Generated MS filename: {filename} (from center piece: '{center_piece}')")
         return filename
@@ -152,11 +141,8 @@ class FilenameGenerator:
         else:
             # Default to star if unclear
             year_or_star = 'Star'
-
-        # Sanitize name to remove spaces (e.g., "Phil Linda" -> "PhilLinda")
-        clean_name = self.sanitize_name(name)
-
-        filename = f"{clean_name} {year_or_star}"
+        
+        filename = f"{name} {year_or_star}"
         self.logger.info(f"Generated RR filename: {filename} (from center piece: '{center_piece}')")
         return filename
     
