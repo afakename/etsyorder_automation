@@ -21,10 +21,11 @@ class FileDatabase:
         self.logger.info(f"Scanning files in: {self.database_path}")
         file_count = 0
         
-        # Scan each year directory
+        # Scan each year directory (excluding outdated 2021 and 2022)
         year_directories = [
-            "2021 Snowflakes", "2022 Snowflakes", "2023 Snowflakes", 
-            "2024 Snowflakes", "2025 Snowflakes"
+            "2023 Snowflakes",
+            "2024 Snowflakes",
+            "2025 Snowflakes"
         ]
         
         for year_dir in year_directories:

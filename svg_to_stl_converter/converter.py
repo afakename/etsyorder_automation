@@ -362,6 +362,7 @@ def convert_svg_to_3d(svg_file, output_stl=None, output_3mf=None):
         mf3_folder = Path("/Users/afakename/DocumentsMac/Snowflake_Database/3D_Models/3MF_Files")
         mf3_folder.mkdir(parents=True, exist_ok=True)
         output_3mf = mf3_folder / svg_path.with_suffix('.3mf').name
+<<<<<<< HEAD
         
     # Ensure paths are Path objects
     output_stl = Path(output_stl)
@@ -370,6 +371,8 @@ def convert_svg_to_3d(svg_file, output_stl=None, output_3mf=None):
     # Check for existing files and add sequential numbers if needed
     output_stl = get_unique_filename(output_stl)
     output_3mf = get_unique_filename(output_3mf)
+=======
+>>>>>>> ccca20230258951427dfc5e8694d5679b4461adb
 
     print(f"\n{'='*60}")
     print(f"SVG to 3D Converter")
