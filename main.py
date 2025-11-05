@@ -786,32 +786,32 @@ class EtsyAutomation:
     
     def generate_illustrator_csvs(self, ms_make, ms_update, rr_make, rr_update):
         """Generate separate CSVs for MS and RR variants - ONLY items that need to be made from scratch"""
-        
+
         # MS CSV - only make items (NOT updates)
         if ms_make:
             ms_df = pd.DataFrame([{
                 'Status': item['order_status'],
                 'Completed': '',
-                'Name': item['personalization'],
+                'Name': item['generated_filename'].split()[0],  # Extract first word (sanitized name without spaces)
                 'Center': item['center'],
                 'Year': item['year'],
                 'Preview': 'preview' if item.get('preview_requested', False) else 'no'
             } for item in ms_make])
-            
+
             ms_file = self.output_folder / 'illustrator_ms.csv'
             ms_df.to_csv(ms_file, index=False)
             print(f"MS variable CSV: {ms_file.name} ({len(ms_make)} items - Make only)")
-        
+
         # RR CSV - only make items (NOT updates)
         if rr_make:
             rr_df = pd.DataFrame([{
                 'Status': item['order_status'],
                 'Completed': '',
-                'Name': item['personalization'],
+                'Name': item['generated_filename'].split()[0],  # Extract first word (sanitized name without spaces)
                 'Center': item['center'],
                 'Preview': 'preview' if item.get('preview_requested', False) else 'no'
             } for item in rr_make])
-            
+
             rr_file = self.output_folder / 'illustrator_rr.csv'
             rr_df.to_csv(rr_file, index=False)
             print(f"RR variable CSV: {rr_file.name} ({len(rr_make)} items - Make only)")
