@@ -45,8 +45,9 @@ class FilenameGenerator:
         # Remove all punctuation (periods, commas, apostrophes, etc.)
         name = re.sub(r'[^\w\s]', '', name)
 
-        # Remove all spaces from the name
-        name = name.replace(' ', '')
+        # Remove ALL whitespace (spaces, newlines, tabs, etc.)
+        # This handles cases where customers hit Enter/Return in the personalization field
+        name = re.sub(r'\s+', '', name)
 
         return name
 
