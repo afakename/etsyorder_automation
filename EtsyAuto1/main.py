@@ -1,5 +1,6 @@
 # main.py
 import sys
+import os
 from datetime import datetime
 from pathlib import Path
 from config import Config
@@ -145,10 +146,17 @@ class EtsyAutomation:
                 # Categorize the order
                 if file_path:
                     # Exact match found - already made
+                    # Add file metadata (creation date, days old, etc.)
+                    file_metadata = self.get_file_metadata(file_path)
+                    order_data.update(file_metadata)
                     file_locations.append(order_data)
                 elif similar_file_path:
                     # Similar file found (different year/star) - needs updated
                     order_data['old_file'] = str(similar_file_path)
+                    # Add file metadata for the old file
+                    old_file_metadata = self.get_file_metadata(similar_file_path)
+                    order_data['old_file_created'] = old_file_metadata['file_created']
+                    order_data['old_file_days_old'] = old_file_metadata['days_since_created']
                     needs_updated.append(order_data)
                 else:
                     # No file found at all - needs made
@@ -177,6 +185,34 @@ class EtsyAutomation:
             divisor = price_data.get('divisor', 100)
             return f"${amount / divisor:.2f}"
         return str(price_data)
+
+    def get_file_metadata(self, file_path):
+        """Get file creation and modification dates"""
+        if not file_path or not Path(file_path).exists():
+            return {
+                'file_created': None,
+                'file_modified': None,
+                'days_since_created': None
+            }
+
+        file_stats = os.stat(file_path)
+
+        # Get creation time (or last metadata change on Linux)
+        created_timestamp = file_stats.st_birthtime if hasattr(file_stats, 'st_birthtime') else file_stats.st_ctime
+        created_date = datetime.fromtimestamp(created_timestamp)
+
+        # Get modification time
+        modified_timestamp = file_stats.st_mtime
+        modified_date = datetime.fromtimestamp(modified_timestamp)
+
+        # Calculate days since creation
+        days_old = (datetime.now() - created_date).days
+
+        return {
+            'file_created': created_date.strftime('%Y-%m-%d %H:%M'),
+            'file_modified': modified_date.strftime('%Y-%m-%d %H:%M'),
+            'days_since_created': days_old
+        }
     
     def generate_reports(self, results):
         """Generate Excel reports"""
