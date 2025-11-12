@@ -400,7 +400,7 @@ class EtsyAutomation:
                     'update_details': update_details if update_details else '',
                     'quantity': transaction.get('quantity', 1),
                     'price': self.format_price(transaction.get('price', {})),
-                    'personalization': variations.get('Personalization', ''),
+                    'personalization': self.filename_generator.smart_capitalize_name(variations.get('Personalization', '')),
                     'center': center,
                     'year': year if year else 'No',
                     'preview': preview,
