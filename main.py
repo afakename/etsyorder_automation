@@ -1,5 +1,6 @@
 # main.py - Complete with open orders filtering by status field
 import sys
+import os
 import argparse
 import json
 from datetime import datetime
@@ -410,12 +411,15 @@ class EtsyAutomation:
                 }
                 
                 all_orders.append(order_data)
-                
+
                 if status == 'make':
                     needs_made.append(order_data)
                 elif status == 'update':
                     needs_updated.append(order_data)
                 else:
+                    # File exists - add file metadata (creation date, days old, etc.)
+                    file_metadata = self.get_file_metadata(file_path)
+                    order_data.update(file_metadata)
                     file_locations.append(order_data)
         
         return {
@@ -465,7 +469,35 @@ class EtsyAutomation:
             divisor = price_data.get('divisor', 100)
             return f"${amount / divisor:.2f}"
         return str(price_data)
-    
+
+    def get_file_metadata(self, file_path):
+        """Get file creation and modification dates"""
+        if not file_path or not Path(file_path).exists():
+            return {
+                'file_created': None,
+                'file_modified': None,
+                'days_since_created': None
+            }
+
+        file_stats = os.stat(file_path)
+
+        # Get creation time (or last metadata change on Linux)
+        created_timestamp = file_stats.st_birthtime if hasattr(file_stats, 'st_birthtime') else file_stats.st_ctime
+        created_date = datetime.fromtimestamp(created_timestamp)
+
+        # Get modification time
+        modified_timestamp = file_stats.st_mtime
+        modified_date = datetime.fromtimestamp(modified_timestamp)
+
+        # Calculate days since creation
+        days_old = (datetime.now() - created_date).days
+
+        return {
+            'file_created': created_date.strftime('%Y-%m-%d %H:%M'),
+            'file_modified': modified_date.strftime('%Y-%m-%d %H:%M'),
+            'days_since_created': days_old
+        }
+
     def apply_customer_grouping(self, worksheet, data, customer_col_name):
         """
         Apply alternating row colors by customer to visually group orders
@@ -696,6 +728,9 @@ class EtsyAutomation:
                         'SKU': item['sku'],
                         'Generated Filename': item['generated_filename'],
                         'File Path': item['file_path'],
+                        'File Created': item.get('file_created', 'N/A'),
+                        'File Modified': item.get('file_modified', 'N/A'),
+                        'Days Old': item.get('days_since_created', 'N/A'),
                         'Quantity': item['quantity'],
                         'Preview': 'Yes' if item.get('preview_requested', False) else 'No'
                     })
