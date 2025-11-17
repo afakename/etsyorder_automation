@@ -324,58 +324,85 @@ class EtsyAPIConnector:
             return False
 
     def get_recent_orders(self, days_back=7, limit=25):
-        """Get recent orders from your shop"""
+        """Get recent orders from your shop with pagination support"""
         if not self.test_connection():
             return None
-            
+
         headers = {
             "Authorization": f"Bearer {self.access_token}",
             "x-api-key": CLIENT_ID
         }
-        
+
         # Calculate date range
         end_date = datetime.now()
         start_date = end_date - timedelta(days=days_back)
-        
+
         url = f"https://api.etsy.com/v3/application/shops/{self.shop_id}/receipts"
-        params = {
-            'limit': limit,
-            'min_created': int(start_date.timestamp()),
-            'max_created': int(end_date.timestamp()),
-            'includes': 'transactions'
-        }
-        
+
         print(f"Fetching orders from {start_date.strftime('%Y-%m-%d')} to {end_date.strftime('%Y-%m-%d')}")
-        
-        response = requests.get(url, headers=headers, params=params)
-        
-        if response.status_code == 200:
-            data = response.json()
-            
-            # DEBUG: Print all fields from first order
-            if data.get('results'):
-                print("\n" + "="*60)
-                print("ETSY ORDER FIELDS (First Order):")
-                print("="*60)
-                sample = data['results'][0]
-                for key in sorted(sample.keys()):
-                    value = sample[key]
-                    # Truncate long values for readability
-                    if isinstance(value, (list, dict)):
-                        if len(str(value)) > 100:
-                            print(f"{key}: [truncated - type: {type(value).__name__}]")
+
+        # Etsy API has a hard limit of 100 per request
+        # If user requests more, we need to paginate
+        all_orders = []
+        batch_size = min(limit, 100)  # Etsy max is 100 per request
+        offset = 0
+
+        while len(all_orders) < limit:
+            # Calculate how many more we need
+            remaining = limit - len(all_orders)
+            current_limit = min(batch_size, remaining)
+
+            params = {
+                'limit': current_limit,
+                'offset': offset,
+                'min_created': int(start_date.timestamp()),
+                'max_created': int(end_date.timestamp()),
+                'includes': 'transactions'
+            }
+
+            response = requests.get(url, headers=headers, params=params)
+
+            if response.status_code == 200:
+                data = response.json()
+                batch = data.get('results', [])
+
+                if not batch:
+                    # No more results
+                    break
+
+                all_orders.extend(batch)
+                print(f"Fetched batch: {len(batch)} orders (total so far: {len(all_orders)})")
+
+                # DEBUG: Print all fields from first order (only on first batch)
+                if offset == 0 and batch:
+                    print("\n" + "="*60)
+                    print("ETSY ORDER FIELDS (First Order):")
+                    print("="*60)
+                    sample = batch[0]
+                    for key in sorted(sample.keys()):
+                        value = sample[key]
+                        # Truncate long values for readability
+                        if isinstance(value, (list, dict)):
+                            if len(str(value)) > 100:
+                                print(f"{key}: [truncated - type: {type(value).__name__}]")
+                            else:
+                                print(f"{key}: {value}")
                         else:
                             print(f"{key}: {value}")
-                    else:
-                        print(f"{key}: {value}")
-                print("="*60 + "\n")
-            
-            print(f"Found {len(data['results'])} orders")
-            return data['results']
-        else:
-            print(f"Failed to get orders: {response.status_code}")
-            print(response.text)
-            return None
+                    print("="*60 + "\n")
+
+                # If we got fewer results than requested, we've reached the end
+                if len(batch) < current_limit:
+                    break
+
+                offset += len(batch)
+            else:
+                print(f"Failed to get orders: {response.status_code}")
+                print(response.text)
+                return None if offset == 0 else all_orders
+
+        print(f"Total orders fetched: {len(all_orders)}")
+        return all_orders
 
     def get_filtered_orders(self, 
                           days_back=7, 
