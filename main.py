@@ -29,28 +29,31 @@ class EtsyAutomation:
         'ThermPrntStand-3D-01', 'USMC-AAV-01', 'USMC-AAVPen-02'
     }
     
-    def __init__(self, mode="open_only", days_back=None):
+    def __init__(self, mode="open_only", days_back=None, order_limit=None):
         # Set up logging
         Config.get_log_path().mkdir(parents=True, exist_ok=True)
-        
+
         # Create timestamped run folder
         self.run_timestamp = datetime.now().strftime('%Y-%m-%d_%H%M%S')
         self.output_folder = Config.get_output_path() / self.run_timestamp
         self.output_folder.mkdir(parents=True, exist_ok=True)
-        
+
         log_file = self.output_folder / f"automation.log"
-        
+
         self.logger = setup_logger("main", log_file)
         self.logger.info("=" * 50)
         self.logger.info(f"Starting Etsy Automation - Run: {self.run_timestamp}")
         self.logger.info(f"Mode: {mode}")
         if days_back:
             self.logger.info(f"Days back: {days_back}")
+        if order_limit:
+            self.logger.info(f"Order limit: {order_limit}")
         self.logger.info("=" * 50)
-        
+
         # Store mode settings
         self.mode = mode
         self.days_back = days_back
+        self.order_limit = order_limit
         
         # Initialize components
         self.etsy_client = EtsyAPIConnector()
@@ -158,13 +161,15 @@ class EtsyAutomation:
         if self.mode == "open_only":
             # Open orders mode - filters by status != Complete
             days = self.days_back or 90
-            self.logger.info(f"Fetching open orders only (last {days} days)")
-            all_orders = self.etsy_client.get_open_orders(days_back=days)
+            limit = self.order_limit or 250  # Default increased to 250
+            self.logger.info(f"Fetching open orders only (last {days} days, limit {limit})")
+            all_orders = self.etsy_client.get_open_orders(days_back=days, limit=limit)
         else:
             # Default: time_based mode
             days = self.days_back or 30
-            self.logger.info(f"Fetching orders from last {days} days (all statuses)")
-            all_orders = self.etsy_client.get_recent_orders(days_back=days, limit=100)
+            limit = self.order_limit or 100
+            self.logger.info(f"Fetching orders from last {days} days (all statuses, limit {limit})")
+            all_orders = self.etsy_client.get_recent_orders(days_back=days, limit=limit)
         
         if not all_orders:
             return []
@@ -882,7 +887,7 @@ class EtsyAutomation:
 def main():
     """Main entry point with argument parsing"""
     parser = argparse.ArgumentParser(description='Etsy Automation - Pull and process orders')
-    parser.add_argument('--mode', 
+    parser.add_argument('--mode',
                        choices=['time_based', 'open_only'],
                        default='open_only',
                        help='Order fetching mode (default: open_only - status != Complete)')
@@ -890,9 +895,13 @@ def main():
                        type=int,
                        default=None,
                        help='Number of days back to fetch (default: 90 for open_only, 30 for time_based)')
-    
+    parser.add_argument('--limit',
+                       type=int,
+                       default=None,
+                       help='Maximum number of orders to fetch (default: 250 for open_only, 100 for time_based)')
+
     args = parser.parse_args()
-    
+
     # Print mode info
     print(f"\n{'='*60}")
     print(f"Etsy Automation Starting")
@@ -900,14 +909,16 @@ def main():
     print(f"Mode: {args.mode}")
     if args.mode == 'open_only':
         days = args.days or 90
-        print(f"Fetching open orders only (last {days} days, status != Complete)")
+        limit = args.limit or 250
+        print(f"Fetching open orders only (last {days} days, limit {limit}, status != Complete)")
     else:
         days = args.days or 30
-        print(f"Fetching orders from last {days} days (all statuses)")
+        limit = args.limit or 100
+        print(f"Fetching orders from last {days} days (limit {limit}, all statuses)")
     print(f"{'='*60}\n")
-    
+
     # Run automation
-    automation = EtsyAutomation(mode=args.mode, days_back=args.days)
+    automation = EtsyAutomation(mode=args.mode, days_back=args.days, order_limit=args.limit)
     automation.run()
 
 if __name__ == "__main__":

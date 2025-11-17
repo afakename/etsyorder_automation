@@ -519,9 +519,9 @@ class EtsyAPIConnector:
             limit=100
         )
     
-    def get_open_orders(self, days_back=90):
+    def get_open_orders(self, days_back=90, limit=250):
         """Get orders that are not yet complete (status != Complete)"""
-        orders = self.get_recent_orders(days_back=days_back, limit=100)
+        orders = self.get_recent_orders(days_back=days_back, limit=limit)
         if not orders:
             return []
         
