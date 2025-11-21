@@ -9,7 +9,7 @@ alias deactivate 'test $?_OLD_VIRTUAL_PATH != 0 && setenv PATH "$_OLD_VIRTUAL_PA
 # Unset irrelevant variables.
 deactivate nondestructive
 
-setenv VIRTUAL_ENV "/Users/afakename/Documents/Documents - Trenton’s Mac mini/Snowflakes Database/Git Repo - VScode - Etsy Automation/etsyorder_automation/etsy_env"
+setenv VIRTUAL_ENV "/Users/afakename/DocumentsMac/Snowflake_Database/Snowflake_Automation/EtsyAuto1/etsy_env"
 
 set _OLD_VIRTUAL_PATH="$PATH"
 setenv PATH "$VIRTUAL_ENV/bin:$PATH"

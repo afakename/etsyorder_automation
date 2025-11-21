@@ -1,6 +1,4 @@
-#!/bin/sh
-'''exec' "/Users/afakename/Documents/Documents - Trenton’s Mac mini/Snowflakes Database/Git Repo - VScode - Etsy Automation/etsyorder_automation/etsy_env/bin/python3.12" "$0" "$@"
-' '''
+#!/Users/afakename/DocumentsMac/Snowflake_Database/Snowflake_Automation/EtsyAuto1/etsy_env/bin/python3.12
 # -*- coding: utf-8 -*-
 import re
 import sys

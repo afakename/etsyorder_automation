@@ -23,7 +23,7 @@ class FileDatabase:
         
         # Scan each year directory plus the new Snowflake SVGs folder
         directories = [
-            "2021 Snowflakes", "2022 Snowflakes", "2023 Snowflakes", 
+            "2023 Snowflakes", 
             "2024 Snowflakes", "2025 Snowflakes", "Snowflake SVGs"
         ]
         
