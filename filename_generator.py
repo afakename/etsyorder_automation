@@ -25,17 +25,24 @@ class FilenameGenerator:
     def generate_filename(self, transaction):
         """Generate filename from transaction data"""
         sku = transaction.get('sku', '')
-        
+
         if sku not in self.sku_mapping:
             self.logger.warning(f"Unknown SKU: {sku}")
             return None
-        
+
         # Extract variation data
         variations = self.extract_variations(transaction.get('variations', []))
         name = variations.get('Personalization', 'Unknown')
-        
+
+        # Log the exact personalization received for debugging
+        self.logger.debug(f"Personalization received from Etsy: '{name}' (length: {len(name)}, repr: {repr(name)})")
+
+        # Preserve the name exactly as provided by Etsy, including all punctuation
+        # Common punctuation in names: apostrophes ('), hyphens (-), periods (.)
+        # These are all safe for filenames on Windows, macOS, and Linux
+
         product_info = self.sku_mapping[sku]
-        
+
         if product_info["type"] == "MS":
             return self.generate_ms_filename(name, variations)
         else:

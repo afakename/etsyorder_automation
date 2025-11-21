@@ -118,11 +118,13 @@ class EtsyAutomation:
 
     def generate_name_variations(self, name):
         """
-        Generate both spaced and combined variations of a name.
+        Generate both spaced and combined variations of a name, handling punctuation.
         Examples:
             "MaryJane" -> ["maryjane", "mary jane"]
             "Mary Jane" -> ["mary jane", "maryjane"]
             "ChivyJohns" -> ["chivyjohns", "chivy johns"]
+            "J'nese" -> ["j'nese", "jnese"]
+            "O'Brien" -> ["o'brien", "obrien"]
         """
         variations = set()
         name_lower = name.lower()
@@ -130,10 +132,20 @@ class EtsyAutomation:
         # Always add the original (lowercase)
         variations.add(name_lower)
 
+        # Add variation without common punctuation (apostrophes, hyphens, periods)
+        # This helps match files where punctuation may have been omitted
+        name_no_punct = re.sub(r"['\-.]", '', name_lower)
+        if name_no_punct != name_lower:
+            variations.add(name_no_punct)
+
         # If name has spaces, add combined version (no spaces)
         if ' ' in name:
             combined = name_lower.replace(' ', '')
             variations.add(combined)
+            # Also add combined version without punctuation
+            combined_no_punct = re.sub(r"['\-.]", '', combined)
+            if combined_no_punct != combined:
+                variations.add(combined_no_punct)
         else:
             # If name has no spaces, try to split on capital letters
             # Look for pattern like "MaryJane" or "ChivyJohns"
@@ -142,6 +154,10 @@ class EtsyAutomation:
             spaced = re.sub(r'(?<!^)(?=[A-Z])', ' ', name).lower()
             if spaced != name_lower:
                 variations.add(spaced)
+                # Also add spaced version without punctuation
+                spaced_no_punct = re.sub(r"['\-.]", '', spaced)
+                if spaced_no_punct != spaced:
+                    variations.add(spaced_no_punct)
 
         return list(variations)
     
