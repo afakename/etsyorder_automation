@@ -2,6 +2,7 @@
 import sys
 import argparse
 import json
+import re
 from datetime import datetime
 from pathlib import Path
 from config import Config
@@ -106,14 +107,43 @@ class EtsyAutomation:
         normalized = filename.lower()
         # Standardize spacing
         normalized = ' '.join(normalized.split())
-        
+
         # Standardize flake/flk variations to 'flk'
         normalized = normalized.replace('flake', 'flk')
-        
+
         # Additional normalizations if needed in the future
         # normalized = normalized.replace('star', 'str') # example
-        
+
         return normalized
+
+    def generate_name_variations(self, name):
+        """
+        Generate both spaced and combined variations of a name.
+        Examples:
+            "MaryJane" -> ["maryjane", "mary jane"]
+            "Mary Jane" -> ["mary jane", "maryjane"]
+            "ChivyJohns" -> ["chivyjohns", "chivy johns"]
+        """
+        variations = set()
+        name_lower = name.lower()
+
+        # Always add the original (lowercase)
+        variations.add(name_lower)
+
+        # If name has spaces, add combined version (no spaces)
+        if ' ' in name:
+            combined = name_lower.replace(' ', '')
+            variations.add(combined)
+        else:
+            # If name has no spaces, try to split on capital letters
+            # Look for pattern like "MaryJane" or "ChivyJohns"
+            # Split before capital letters that follow lowercase letters
+            # Insert space before capital letters (except at start)
+            spaced = re.sub(r'(?<!^)(?=[A-Z])', ' ', name).lower()
+            if spaced != name_lower:
+                variations.add(spaced)
+
+        return list(variations)
     
     def run(self):
         """Main execution flow"""
@@ -222,53 +252,99 @@ class EtsyAutomation:
         """
         Determine if design needs to be made, updated, or already exists.
         UPDATED LOGIC: Only exact matches go to "Already Made"
+        Handles both spaced and combined name formats (e.g., "Mary Jane" vs "MaryJane")
         Returns: (status, file_path, update_details)
         """
-        # Step 1: Check for EXACT match
-        normalized_search = self.normalize_filename(filename)
-        
-        for indexed_filename, file_path in self.file_database.file_index.items():
-            if self.normalize_filename(indexed_filename) == normalized_search:
-                self.logger.info(f"EXACT MATCH found: {indexed_filename}")
-                return 'exists', file_path, None
-        
-        # Step 2: Check for UPDATE candidates
-        # Parse the filename
+        # Step 1: Check for EXACT match with name variations
+        # Try both the original filename and variations with different name formats
         parts = filename.split()
         if not parts:
             return 'make', None, None
-        
-        name = parts[0]  # First word is always the name
+
+        # Extract the name portion (everything before 'Ms', 'Star', year, or 'Flk')
+        name_parts = []
+        for part in parts:
+            part_lower = part.lower()
+            if part_lower in ['ms', 'star', 'flk', 'flake'] or (part.isdigit() and len(part) == 4):
+                break
+            name_parts.append(part)
+
+        if not name_parts:
+            return 'make', None, None
+
+        original_name = ' '.join(name_parts)
+        name_variations = self.generate_name_variations(original_name)
+
+        # Build search filenames with each name variation
+        search_filenames = []
+        suffix = ' '.join(parts[len(name_parts):])  # Everything after the name (Ms Star, etc.)
+
+        for name_var in name_variations:
+            if suffix:
+                search_filename = f"{name_var} {suffix}"
+            else:
+                search_filename = name_var
+            search_filenames.append(self.normalize_filename(search_filename))
+
+        # Check for exact matches with any variation
+        for indexed_filename, file_path in self.file_database.file_index.items():
+            normalized_indexed = self.normalize_filename(indexed_filename)
+            for search_filename in search_filenames:
+                if normalized_indexed == search_filename:
+                    self.logger.info(f"EXACT MATCH found: {indexed_filename} (matched variation: {search_filename})")
+                    return 'exists', file_path, None
+
+        # Step 2: Check for UPDATE candidates
         is_ms = any(p.lower() == 'ms' for p in parts)
-        
+
         # Extract design details from ordered file
         ordered_center = self.extract_center_from_filename(filename)
         ordered_year = self.extract_year(filename)
-        
+
         # Search for similar files that could be updated
         for indexed_filename, file_path in self.file_database.file_index.items():
             indexed_parts = indexed_filename.split()
             if not indexed_parts:
                 continue
-            
-            indexed_name = indexed_parts[0]
-            indexed_is_ms = any(p.lower() == 'ms' for p in indexed_parts)
-            
-            # Names must match (case insensitive)
-            if indexed_name.lower() != name.lower():
+
+            # Extract name from indexed file (everything before Ms/Star/Flk/Year)
+            indexed_name_parts = []
+            for part in indexed_parts:
+                part_lower = part.lower()
+                if part_lower in ['ms', 'star', 'flk', 'flake'] or (part.isdigit() and len(part) == 4):
+                    break
+                indexed_name_parts.append(part)
+
+            if not indexed_name_parts:
                 continue
-            
+
+            indexed_name = ' '.join(indexed_name_parts)
+            indexed_is_ms = any(p.lower() == 'ms' for p in indexed_parts)
+
+            # Check if names match (using variations)
+            indexed_name_variations = self.generate_name_variations(indexed_name)
+
+            # Names must match (check if any variation of one matches any variation of the other)
+            names_match = False
+            for name_var in name_variations:
+                if name_var in indexed_name_variations:
+                    names_match = True
+                    break
+
+            if not names_match:
+                continue
+
             # MS variants: Must both be MS (or both not MS)
             if is_ms != indexed_is_ms:
                 continue
-            
+
             # If we get here, we have a potential update candidate
             # (same name, same product type MS/RR)
-            
+
             # Check if details differ (center or year)
             indexed_center = self.extract_center_from_filename(indexed_filename)
             indexed_year = self.extract_year(indexed_filename)
-            
+
             # If center or year differs, it's an update
             if ordered_center != indexed_center or ordered_year != indexed_year:
                 # Build update details string
@@ -279,11 +355,11 @@ class EtsyAutomation:
                     old_year = indexed_year if indexed_year else "No Year"
                     new_year = ordered_year if ordered_year else "No Year"
                     changes.append(f"Year: {old_year} → {new_year}")
-                
+
                 update_details = " | ".join(changes)
                 self.logger.info(f"UPDATE candidate found: {indexed_filename} → {filename} ({update_details})")
                 return 'update', file_path, update_details
-        
+
         # Step 3: No matches found - needs to be made
         self.logger.info(f"NO MATCH found for: {filename} - needs to be MADE")
         return 'make', None, None
