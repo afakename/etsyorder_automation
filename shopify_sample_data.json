@@ -1,0 +1,277 @@
+[
+  {
+    "receipt_id": "6852409393447",
+    "order_number": 1020,
+    "name": "Unknown Customer",
+    "email": "",
+    "message_from_buyer": null,
+    "transactions": [
+      {
+        "sku": null,
+        "title": "CD case",
+        "quantity": 1,
+        "price": {
+          "amount": 0.0,
+          "divisor": 100
+        },
+        "variations": [],
+        "product_id": null,
+        "variant_id": null
+      }
+    ],
+    "created_timestamp": "2025-10-20T07:52:56-04:00",
+    "fulfillment_status": "fulfilled",
+    "financial_status": "paid",
+    "is_complete": true,
+    "platform": "shopify",
+    "tags": [
+      ""
+    ]
+  },
+  {
+    "receipt_id": "6842254786855",
+    "order_number": 1019,
+    "name": "Hannah Watkins",
+    "email": "hannahandluner@gmail.com",
+    "message_from_buyer": null,
+    "transactions": [
+      {
+        "sku": "PerSnoFlkOrn-MS-01",
+        "title": "Custom Name Snowflake Ornament",
+        "quantity": 1,
+        "price": {
+          "amount": 1898.9999999999998,
+          "divisor": 100
+        },
+        "variations": [
+          {
+            "formatted_name": "_has_gpo",
+            "formatted_value": "1252196"
+          },
+          {
+            "formatted_name": "text-1",
+            "formatted_value": "Chase"
+          },
+          {
+            "formatted_name": "Center Design",
+            "formatted_value": "Flake Design"
+          },
+          {
+            "formatted_name": "Year or No Year",
+            "formatted_value": "No Year"
+          }
+        ],
+        "product_id": 9943476142375,
+        "variant_id": 50459609661735
+      },
+      {
+        "sku": "PerSnoFlkOrn-MS-01",
+        "title": "Custom Name Snowflake Ornament",
+        "quantity": 1,
+        "price": {
+          "amount": 1898.9999999999998,
+          "divisor": 100
+        },
+        "variations": [
+          {
+            "formatted_name": "_has_gpo",
+            "formatted_value": "1252196"
+          },
+          {
+            "formatted_name": "text-1",
+            "formatted_value": "Tobias"
+          },
+          {
+            "formatted_name": "Center Design",
+            "formatted_value": "Star Design"
+          },
+          {
+            "formatted_name": "Year or No Year",
+            "formatted_value": "No Year"
+          }
+        ],
+        "product_id": 9943476142375,
+        "variant_id": 50459609661735
+      }
+    ],
+    "created_timestamp": "2025-10-13T20:26:47-04:00",
+    "fulfillment_status": "fulfilled",
+    "financial_status": "paid",
+    "is_complete": true,
+    "platform": "shopify",
+    "tags": [
+      ""
+    ]
+  },
+  {
+    "receipt_id": "6785213202727",
+    "order_number": 1018,
+    "name": "Keith Sczurek",
+    "email": "airlineacres@gmail.com",
+    "message_from_buyer": null,
+    "transactions": [
+      {
+        "sku": "",
+        "title": "Personalized Snowflake Ornaments",
+        "quantity": 1,
+        "price": {
+          "amount": 2500.0,
+          "divisor": 100
+        },
+        "variations": [
+          {
+            "formatted_name": "_has_gpo",
+            "formatted_value": "388199"
+          },
+          {
+            "formatted_name": "Personalization feature text",
+            "formatted_value": "Ellie"
+          },
+          {
+            "formatted_name": "Center Piece",
+            "formatted_value": "Let the design create the center piece"
+          }
+        ],
+        "product_id": 8277357756711,
+        "variant_id": 44953560318247
+      },
+      {
+        "sku": "",
+        "title": "Personalized Snowflake Ornaments",
+        "quantity": 1,
+        "price": {
+          "amount": 2500.0,
+          "divisor": 100
+        },
+        "variations": [
+          {
+            "formatted_name": "_has_gpo",
+            "formatted_value": "388199"
+          },
+          {
+            "formatted_name": "Personalization feature text",
+            "formatted_value": "Arya"
+          },
+          {
+            "formatted_name": "Center Piece",
+            "formatted_value": "Let the design create the center piece"
+          }
+        ],
+        "product_id": 8277357756711,
+        "variant_id": 44953560318247
+      },
+      {
+        "sku": "",
+        "title": "Personalized Snowflake Ornaments",
+        "quantity": 1,
+        "price": {
+          "amount": 2500.0,
+          "divisor": 100
+        },
+        "variations": [
+          {
+            "formatted_name": "_has_gpo",
+            "formatted_value": "388199"
+          },
+          {
+            "formatted_name": "Personalization feature text",
+            "formatted_value": "Layla"
+          },
+          {
+            "formatted_name": "Center Piece",
+            "formatted_value": "Let the design create the center piece"
+          }
+        ],
+        "product_id": 8277357756711,
+        "variant_id": 44953560318247
+      },
+      {
+        "sku": "",
+        "title": "Personalized Snowflake Ornaments",
+        "quantity": 1,
+        "price": {
+          "amount": 2500.0,
+          "divisor": 100
+        },
+        "variations": [
+          {
+            "formatted_name": "_has_gpo",
+            "formatted_value": "388199"
+          },
+          {
+            "formatted_name": "Personalization feature text",
+            "formatted_value": "Isabel"
+          },
+          {
+            "formatted_name": "Center Piece",
+            "formatted_value": "Let the design create the center piece"
+          }
+        ],
+        "product_id": 8277357756711,
+        "variant_id": 44953560318247
+      },
+      {
+        "sku": "",
+        "title": "Personalized Snowflake Ornaments",
+        "quantity": 1,
+        "price": {
+          "amount": 2500.0,
+          "divisor": 100
+        },
+        "variations": [
+          {
+            "formatted_name": "_has_gpo",
+            "formatted_value": "388199"
+          },
+          {
+            "formatted_name": "Personalization feature text",
+            "formatted_value": "Evelyn"
+          },
+          {
+            "formatted_name": "Center Piece",
+            "formatted_value": "Let the design create the center piece"
+          }
+        ],
+        "product_id": 8277357756711,
+        "variant_id": 44953560318247
+      }
+    ],
+    "created_timestamp": "2025-09-15T15:50:59-04:00",
+    "fulfillment_status": "fulfilled",
+    "financial_status": "paid",
+    "is_complete": true,
+    "platform": "shopify",
+    "tags": [
+      ""
+    ]
+  },
+  {
+    "receipt_id": "6705493082407",
+    "order_number": 1017,
+    "name": "Nicole Huau",
+    "email": "nicnole@att.net",
+    "message_from_buyer": null,
+    "transactions": [
+      {
+        "sku": "",
+        "title": "Hope Snowflake Ornament",
+        "quantity": 20,
+        "price": {
+          "amount": 1000.0,
+          "divisor": 100
+        },
+        "variations": [],
+        "product_id": 9184041959719,
+        "variant_id": 48189082075431
+      }
+    ],
+    "created_timestamp": "2025-08-02T18:14:27-04:00",
+    "fulfillment_status": "fulfilled",
+    "financial_status": "paid",
+    "is_complete": true,
+    "platform": "shopify",
+    "tags": [
+      ""
+    ]
+  }
+]
