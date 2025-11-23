@@ -757,6 +757,10 @@ class EtsyAutomation:
             if workflow_results['all_orders']:
                 df_all = pd.DataFrame(workflow_results['all_orders'])
                 df_all.to_excel(writer, sheet_name='All Workflow Orders', index=False)
+
+                # Apply customer grouping colors
+                worksheet = writer.sheets['All Workflow Orders']
+                self.apply_customer_grouping(worksheet, df_all, 'customer_name')
         
         # Generate Illustrator CSVs
         self.generate_illustrator_csvs(ms_make, ms_update, rr_make, rr_update)
