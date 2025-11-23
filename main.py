@@ -458,6 +458,20 @@ class EtsyAutomation:
         
         return processed
     
+    def get_days_since_modified(self, file_path):
+        """Calculate days since file was last modified"""
+        try:
+            file_path_obj = Path(file_path)
+            if not file_path_obj.exists():
+                return 'N/A'
+
+            modified_time = datetime.fromtimestamp(file_path_obj.stat().st_mtime)
+            days_ago = (datetime.now() - modified_time).days
+            return days_ago
+        except Exception as e:
+            self.logger.warning(f"Could not get modified time for {file_path}: {e}")
+            return 'N/A'
+
     def format_price(self, price_data):
         """Format price from Etsy API format"""
         if isinstance(price_data, dict):
@@ -688,6 +702,7 @@ class EtsyAutomation:
             if workflow_results['file_locations']:
                 made_data = []
                 for item in workflow_results['file_locations']:
+                    days_since_modified = self.get_days_since_modified(item['file_path'])
                     made_data.append({
                         'Status': item['order_status'],
                         'Order ID': item['order_id'],
@@ -696,6 +711,7 @@ class EtsyAutomation:
                         'SKU': item['sku'],
                         'Generated Filename': item['generated_filename'],
                         'File Path': item['file_path'],
+                        'Days Since Modified': days_since_modified,
                         'Quantity': item['quantity'],
                         'Preview': 'Yes' if item.get('preview_requested', False) else 'No'
                     })
