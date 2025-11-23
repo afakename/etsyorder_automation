@@ -159,12 +159,12 @@ class EtsyAutomation:
             # Open orders mode - filters by status != Complete
             days = self.days_back or 90
             self.logger.info(f"Fetching open orders only (last {days} days)")
-            all_orders = self.etsy_client.get_open_orders(days_back=days)
+            all_orders = self.etsy_client.get_open_orders(days_back=days, limit=500)
         else:
             # Default: time_based mode
             days = self.days_back or 30
             self.logger.info(f"Fetching orders from last {days} days (all statuses)")
-            all_orders = self.etsy_client.get_recent_orders(days_back=days, limit=100)
+            all_orders = self.etsy_client.get_recent_orders(days_back=days, limit=500)
         
         if not all_orders:
             return []
@@ -757,6 +757,10 @@ class EtsyAutomation:
             if workflow_results['all_orders']:
                 df_all = pd.DataFrame(workflow_results['all_orders'])
                 df_all.to_excel(writer, sheet_name='All Workflow Orders', index=False)
+
+                # Apply customer grouping colors
+                worksheet = writer.sheets['All Workflow Orders']
+                self.apply_customer_grouping(worksheet, df_all, 'customer_name')
         
         # Generate Illustrator CSVs
         self.generate_illustrator_csvs(ms_make, ms_update, rr_make, rr_update)

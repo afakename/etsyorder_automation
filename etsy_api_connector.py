@@ -324,58 +324,88 @@ class EtsyAPIConnector:
             return False
 
     def get_recent_orders(self, days_back=7, limit=25):
-        """Get recent orders from your shop"""
+        """Get recent orders from your shop with pagination support for 100+ orders"""
         if not self.test_connection():
             return None
-            
+
         headers = {
             "Authorization": f"Bearer {self.access_token}",
             "x-api-key": CLIENT_ID
         }
-        
+
         # Calculate date range
         end_date = datetime.now()
         start_date = end_date - timedelta(days=days_back)
-        
+
         url = f"https://api.etsy.com/v3/application/shops/{self.shop_id}/receipts"
-        params = {
-            'limit': limit,
-            'min_created': int(start_date.timestamp()),
-            'max_created': int(end_date.timestamp()),
-            'includes': 'transactions'
-        }
-        
+
         print(f"Fetching orders from {start_date.strftime('%Y-%m-%d')} to {end_date.strftime('%Y-%m-%d')}")
-        
-        response = requests.get(url, headers=headers, params=params)
-        
-        if response.status_code == 200:
-            data = response.json()
-            
-            # DEBUG: Print all fields from first order
-            if data.get('results'):
-                print("\n" + "="*60)
-                print("ETSY ORDER FIELDS (First Order):")
-                print("="*60)
-                sample = data['results'][0]
-                for key in sorted(sample.keys()):
-                    value = sample[key]
-                    # Truncate long values for readability
-                    if isinstance(value, (list, dict)):
-                        if len(str(value)) > 100:
-                            print(f"{key}: [truncated - type: {type(value).__name__}]")
+
+        all_orders = []
+        offset = 0
+        page = 1
+
+        # Pagination loop - Etsy limits to 100 per request
+        while True:
+            params = {
+                'limit': min(limit, 100),  # Etsy max is 100
+                'offset': offset,
+                'min_created': int(start_date.timestamp()),
+                'max_created': int(end_date.timestamp()),
+                'includes': 'transactions'
+            }
+
+            response = requests.get(url, headers=headers, params=params)
+
+            if response.status_code == 200:
+                data = response.json()
+                results = data.get('results', [])
+
+                # DEBUG: Print all fields from first order (only on first page)
+                if page == 1 and results:
+                    print("\n" + "="*60)
+                    print("ETSY ORDER FIELDS (First Order):")
+                    print("="*60)
+                    sample = results[0]
+                    for key in sorted(sample.keys()):
+                        value = sample[key]
+                        # Truncate long values for readability
+                        if isinstance(value, (list, dict)):
+                            if len(str(value)) > 100:
+                                print(f"{key}: [truncated - type: {type(value).__name__}]")
+                            else:
+                                print(f"{key}: {value}")
                         else:
                             print(f"{key}: {value}")
-                    else:
-                        print(f"{key}: {value}")
-                print("="*60 + "\n")
-            
-            print(f"Found {len(data['results'])} orders")
-            return data['results']
-        else:
-            print(f"Failed to get orders: {response.status_code}")
-            print(response.text)
-            return None
+                    print("="*60 + "\n")
+
+                if not results:
+                    # No more results
+                    break
+
+                all_orders.extend(results)
+                print(f"  Page {page}: Fetched {len(results)} orders (total so far: {len(all_orders)})")
+
+                # If we got less than the limit, we're done
+                if len(results) < min(limit, 100):
+                    break
+
+                # If we've reached the user's requested limit, stop
+                if len(all_orders) >= limit:
+                    all_orders = all_orders[:limit]
+                    break
+
+                # Move to next page
+                offset += len(results)
+                page += 1
+
+            else:
+                print(f"Failed to get orders: {response.status_code}")
+                print(response.text)
+                break
+
+        print(f"Total orders fetched: {len(all_orders)}")
+        return all_orders if all_orders else None
 
     def get_filtered_orders(self, 
                           days_back=7, 
@@ -519,12 +549,12 @@ class EtsyAPIConnector:
             limit=100
         )
     
-    def get_open_orders(self, days_back=90):
+    def get_open_orders(self, days_back=90, limit=500):
         """Get orders that are not yet complete (status != Complete)"""
-        orders = self.get_recent_orders(days_back=days_back, limit=100)
+        orders = self.get_recent_orders(days_back=days_back, limit=limit)
         if not orders:
             return []
-        
+
         open_orders = []
         for order in orders:
             # Filter for orders that are NOT complete
@@ -533,7 +563,7 @@ class EtsyAPIConnector:
             order_status = order.get('status', '').lower()
             if order_status != 'complete' and order_status != 'completed':
                 open_orders.append(order)
-        
+
         print(f"Filtered to {len(open_orders)} open orders (status != Complete)")
         return open_orders
 
