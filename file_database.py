@@ -79,13 +79,39 @@ class FileDatabase:
     def extract_filename_parts(self, filename):
         """Extract components from filename"""
         parts = filename.lower().split()
-        
+
+        if not parts:
+            return {
+                'name': '',
+                'has_ms': False,
+                'design': '',
+                'year': '',
+                'version': 0
+            }
+
+        # First word is always the name
+        name = parts[0]
+
+        # Check if second part is a version number (1-3 digits, not a 4-digit year)
+        version = 0
+        if len(parts) > 1 and parts[1].isdigit() and len(parts[1]) < 4:
+            version = int(parts[1])
+
+        # Extract year (4-digit number only)
+        year = next((p for p in parts if p.isdigit() and len(p) == 4), '')
+
+        # Check for MS
+        has_ms = 'ms' in parts
+
+        # Extract design
+        design = 'star' if any('star' in p for p in parts) else 'flk' if any(term in ' '.join(parts) for term in ['flk', 'flake']) else ''
+
         return {
-            'name': parts[0] if parts else '',
-            'has_ms': 'ms' in parts,
-            'design': 'star' if any('star' in p for p in parts) else 'flk' if any(term in ' '.join(parts) for term in ['flk', 'flake']) else '',
-            'year': next((p for p in parts if p.isdigit()), ''),
-            'version': self.get_version_number(filename)
+            'name': name,
+            'has_ms': has_ms,
+            'design': design,
+            'year': year,
+            'version': version
         }
     
     def is_similar_design(self, target_parts, indexed_parts):
@@ -97,6 +123,6 @@ class FileDatabase:
         )
     
     def get_version_number(self, filename):
-        """Extract version number from filename"""
-        match = re.search(r'\w+\s+(\d+)', str(filename))
+        """Extract version number from filename (1-3 digits only, not 4-digit years)"""
+        match = re.search(r'\w+\s+(\d{1,3})(?:\s|$)', str(filename))
         return int(match.group(1)) if match else 0

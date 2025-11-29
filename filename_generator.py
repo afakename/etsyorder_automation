@@ -50,13 +50,50 @@ class FilenameGenerator:
             variations[formatted_name] = formatted_value
         return variations
 
+    def normalize_capitalization(self, name):
+        """
+        Normalize capitalization for personalization names.
+
+        - Converts all-caps to proper case (one capital per word)
+        - Preserves compound capitalization like MacKayla, McDonald, KaylaMarie
+
+        Examples:
+            'LILY JEAN' -> 'Lily Jean'
+            'lily jean' -> 'Lily Jean'
+            'MacKayla' -> 'MacKayla' (preserved - mixed case preserved)
+            'MACKAYLA' -> 'Mackayla' (can't detect compound in all-caps)
+            'KaylaMarie' -> 'KaylaMarie' (preserved - mixed case preserved)
+        """
+        if not name:
+            return name
+
+        # If the name has mixed case (not all upper, not all lower),
+        # preserve it as-is because it likely has intentional compound capitalization
+        if not name.isupper() and not name.islower():
+            # Has intentional mixed case (like MacKayla, KaylaMarie) - preserve it
+            return name
+
+        # Apply title case for all-caps or all-lowercase input
+        # This capitalizes the first letter of each word
+        return name.title()
+
     def sanitize_name(self, name):
         """
-        Remove spaces from personalization names.
-        Example: 'Lily Jean' -> 'LilyJean'
-                 'Phil Linda' -> 'PhilLinda'
+        Normalize and sanitize personalization names:
+        1. Normalize capitalization (handle all-caps, preserve compound names)
+        2. Remove spaces
+
+        Examples:
+            'LILY JEAN' -> 'LilyJean'
+            'lily jean' -> 'LilyJean'
+            'MacKayla Smith' -> 'MacKaylaSmith' (preserves MacKayla capitalization)
+            'KaylaMarie' -> 'KaylaMarie' (preserves compound capitalization)
         """
-        return name.replace(' ', '')
+        # First normalize capitalization
+        normalized = self.normalize_capitalization(name)
+
+        # Then remove spaces
+        return normalized.replace(' ', '')
 
     def generate_ms_filename(self, name, variations):
         """

@@ -221,69 +221,56 @@ class EtsyAutomation:
     def check_file_status(self, filename):
         """
         Determine if design needs to be made, updated, or already exists.
-        UPDATED LOGIC: Only exact matches go to "Already Made"
+        VERSION-AWARE LOGIC: Finds all versions and prioritizes highest version number.
         Returns: (status, file_path, update_details)
         """
-        # Step 1: Check for EXACT match
+        # Step 1: Check for EXACT match (same name, same version, same everything)
         normalized_search = self.normalize_filename(filename)
-        
+
         for indexed_filename, file_path in self.file_database.file_index.items():
             if self.normalize_filename(indexed_filename) == normalized_search:
                 self.logger.info(f"EXACT MATCH found: {indexed_filename}")
                 return 'exists', file_path, None
-        
-        # Step 2: Check for UPDATE candidates
-        # Parse the filename
-        parts = filename.split()
-        if not parts:
-            return 'make', None, None
-        
-        name = parts[0]  # First word is always the name
-        is_ms = any(p.lower() == 'ms' for p in parts)
-        
-        # Extract design details from ordered file
-        ordered_center = self.extract_center_from_filename(filename)
-        ordered_year = self.extract_year(filename)
-        
-        # Search for similar files that could be updated
-        for indexed_filename, file_path in self.file_database.file_index.items():
-            indexed_parts = indexed_filename.split()
-            if not indexed_parts:
-                continue
-            
-            indexed_name = indexed_parts[0]
-            indexed_is_ms = any(p.lower() == 'ms' for p in indexed_parts)
-            
-            # Names must match (case insensitive)
-            if indexed_name.lower() != name.lower():
-                continue
-            
-            # MS variants: Must both be MS (or both not MS)
-            if is_ms != indexed_is_ms:
-                continue
-            
-            # If we get here, we have a potential update candidate
-            # (same name, same product type MS/RR)
-            
-            # Check if details differ (center or year)
-            indexed_center = self.extract_center_from_filename(indexed_filename)
-            indexed_year = self.extract_year(indexed_filename)
-            
+
+        # Step 2: Use fuzzy search to find all similar designs (ignores version numbers)
+        # This will find "Amber Star", "Amber 2 Star", "Amber 3 Star" when searching for "Amber Star"
+        # and return them sorted by version (highest first)
+        fuzzy_matches = self.file_database.fuzzy_search(filename)
+
+        if fuzzy_matches:
+            # Get the highest version match (first in sorted list)
+            best_match = fuzzy_matches[0]
+            best_match_filename = best_match.stem
+
+            self.logger.info(f"FUZZY MATCH found: {best_match_filename} (highest version)")
+
+            # Parse the ordered filename to compare details
+            ordered_center = self.extract_center_from_filename(filename)
+            ordered_year = self.extract_year(filename)
+
+            # Parse the matched filename to compare details
+            matched_center = self.extract_center_from_filename(best_match_filename)
+            matched_year = self.extract_year(best_match_filename)
+
             # If center or year differs, it's an update
-            if ordered_center != indexed_center or ordered_year != indexed_year:
-                # Build update details string
+            if ordered_center != matched_center or ordered_year != matched_year:
                 changes = []
-                if indexed_center != ordered_center:
-                    changes.append(f"Center: {indexed_center.capitalize()} → {ordered_center.capitalize()}")
-                if indexed_year != ordered_year:
-                    old_year = indexed_year if indexed_year else "No Year"
+                if matched_center != ordered_center:
+                    changes.append(f"Center: {matched_center.capitalize()} → {ordered_center.capitalize()}")
+                if matched_year != ordered_year:
+                    old_year = matched_year if matched_year else "No Year"
                     new_year = ordered_year if ordered_year else "No Year"
                     changes.append(f"Year: {old_year} → {new_year}")
-                
+
                 update_details = " | ".join(changes)
-                self.logger.info(f"UPDATE candidate found: {indexed_filename} → {filename} ({update_details})")
-                return 'update', file_path, update_details
-        
+                self.logger.info(f"UPDATE needed: {best_match_filename} → {filename} ({update_details})")
+                return 'update', best_match, update_details
+            else:
+                # Same center and year - this is essentially the same design
+                # Return 'exists' with the highest version file
+                self.logger.info(f"MATCH found (version {self.file_database.get_version_number(best_match_filename)}): {best_match_filename}")
+                return 'exists', best_match, None
+
         # Step 3: No matches found - needs to be made
         self.logger.info(f"NO MATCH found for: {filename} - needs to be MADE")
         return 'make', None, None
