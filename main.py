@@ -222,19 +222,27 @@ class EtsyAutomation:
         """
         Determine if design needs to be made, updated, or already exists.
         VERSION-AWARE LOGIC: Finds all versions and prioritizes highest version number.
+        EXCLUDES files modified in 2021 or 2022.
         Returns: (status, file_path, update_details)
         """
         # Step 1: Check for EXACT match (same name, same version, same everything)
+        # but skip files from 2021-2022
         normalized_search = self.normalize_filename(filename)
 
         for indexed_filename, file_path in self.file_database.file_index.items():
             if self.normalize_filename(indexed_filename) == normalized_search:
+                # Skip files from 2021 and 2022
+                if self.file_database.is_file_too_old(file_path):
+                    self.logger.info(f"Skipping old exact match from 2021/2022: {indexed_filename}")
+                    continue
+
                 self.logger.info(f"EXACT MATCH found: {indexed_filename}")
                 return 'exists', file_path, None
 
         # Step 2: Use fuzzy search to find all similar designs (ignores version numbers)
         # This will find "Amber Star", "Amber 2 Star", "Amber 3 Star" when searching for "Amber Star"
         # and return them sorted by version (highest first)
+        # fuzzy_search already filters out 2021-2022 files
         fuzzy_matches = self.file_database.fuzzy_search(filename)
 
         if fuzzy_matches:

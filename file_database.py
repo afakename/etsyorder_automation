@@ -2,6 +2,7 @@
 import os
 from pathlib import Path
 import re
+from datetime import datetime
 from logger import setup_logger
 from config import Config
 
@@ -61,17 +62,40 @@ class FileDatabase:
         self.logger.warning(f"No file found for: {target_filename}")
         return None
     
+    def is_file_too_old(self, file_path):
+        """
+        Check if file was modified before 2023 (exclude 2021 and 2022 files).
+        Returns True if file is from 2021 or 2022.
+        """
+        try:
+            modified_time = datetime.fromtimestamp(file_path.stat().st_mtime)
+            # Exclude files modified before January 1, 2023
+            cutoff_date = datetime(2023, 1, 1)
+            return modified_time < cutoff_date
+        except Exception as e:
+            self.logger.warning(f"Could not check file date for {file_path}: {e}")
+            # If we can't check the date, don't exclude it
+            return False
+
     def fuzzy_search(self, target_filename):
-        """Search for files with similar names"""
+        """
+        Search for files with similar names.
+        Excludes files modified in 2021 or 2022.
+        """
         target_parts = self.extract_filename_parts(target_filename)
-        
+
         matches = []
         for indexed_filename, file_path in self.file_index.items():
+            # Skip files from 2021 and 2022
+            if self.is_file_too_old(file_path):
+                self.logger.debug(f"Skipping old file: {file_path.name}")
+                continue
+
             indexed_parts = self.extract_filename_parts(indexed_filename)
-            
+
             if self.is_similar_design(target_parts, indexed_parts):
                 matches.append(file_path)
-        
+
         # Sort by version number (higher first)
         matches.sort(key=lambda x: self.get_version_number(x.name), reverse=True)
         return matches
