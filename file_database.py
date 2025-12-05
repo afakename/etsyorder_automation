@@ -128,7 +128,19 @@ class FileDatabase:
         has_ms = 'ms' in parts
 
         # Extract design
-        design = 'star' if any('star' in p for p in parts) else 'flk' if any(term in ' '.join(parts) for term in ['flk', 'flake']) else ''
+        # Logic:
+        # - Explicit "star" in filename → star
+        # - Explicit "flk"/"flake" in filename → flk
+        # - Has a year (4 digits) → star (RR with year = star center)
+        # - Default → star
+        if any('star' in p for p in parts):
+            design = 'star'
+        elif any(term in ' '.join(parts) for term in ['flk', 'flake']):
+            design = 'flk'
+        elif year:  # If there's a year, it's a star design
+            design = 'star'
+        else:
+            design = 'star'  # Default to star
 
         return {
             'name': name,
