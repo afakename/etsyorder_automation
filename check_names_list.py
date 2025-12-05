@@ -115,6 +115,13 @@ class NameListChecker:
                 # For "John Jackie (if possible)", just use "John Jackie"
                 name = name.split('(')[0].strip()
 
+            # If name already has "Star" or "Flk" at the end, strip it
+            # (some names come as "Mark Star" already)
+            if name.endswith(' Star') or name.endswith(' star'):
+                name = name.rsplit(' ', 1)[0]
+            elif name.endswith(' Flk') or name.endswith(' flk') or name.endswith(' Flake') or name.endswith(' flake'):
+                name = name.rsplit(' ', 1)[0]
+
             # Sanitize the name (normalize caps, remove spaces)
             sanitized_name = self.filename_generator.sanitize_name(name)
 
@@ -243,70 +250,23 @@ def main():
     """Entry point"""
     # List of names to check
     names_list = """
-Atwell
-Brunette
-Dellas
-Davis
-DeFrain
-Dellas
-Dunigan
-Harton
-Higdon
-Huntzinger
-Baumann
-Sibrt
-Norris
-Siegfried
-Timmerman
-John Jackie (if possible)
-Christiano
-Harmes
-Kenney
-Riede
-Lalomia
-Tooley
-Pahl
-Jones
-Brown
-Soren Tracy (if possible)
-Renner
-Sutton
-Anderson
-Olfier
-Craft
-Leeth
-Scott
-Minteer
-Bearman
-Sycks
-Variell
-McAndrew
-Gates
-Kreklau
-Crowder
-Kloer
-Waugh
-Bowden
-Ziegler
-Mangones
-Town
-Malak
-Blunt
-Wright
-Fenger
-Ecker
-Mangones
-MacFarlane
-Mooney
-Mohney
-Budan
-Kampf
-Fenger
-Carlson
-Nally
-Henry
-Hoop
-Peters
+Galen
+Trisha
+Anna
+Erica
+Debra
+Sierra
+Lisa
+Jasmine
+Tiona
+Joseph
+Brook
+Byron
+Pheobe Star
+Mark Star
+Carol Star
+Linda Star
+John Star
 """.strip().split('\n')
 
     # Create checker and run
