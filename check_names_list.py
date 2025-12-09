@@ -159,7 +159,7 @@ class NameListChecker:
 
         return results
 
-    def generate_report(self, results):
+    def generate_report(self, results, product_type='RR'):
         """Generate Excel report with results"""
         output_file = self.output_folder / "name_check_results.xlsx"
 
@@ -269,7 +269,7 @@ class NameListChecker:
             results = self.process_names(names_list, product_type, center)
 
             # Generate report
-            output_file, csv_file = self.generate_report(results)
+            output_file, csv_file = self.generate_report(results, product_type)
 
             # Print summary
             print(f"\n{'='*60}")
