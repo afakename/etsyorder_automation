@@ -208,7 +208,51 @@ class NameListChecker:
                         cell.style = 'Hyperlink'
 
         self.logger.info(f"Report generated: {output_file}")
-        return output_file
+
+        # Generate Illustrator CSV for items that need made
+        csv_file = self.generate_illustrator_csv(results['needs_made'], product_type)
+
+        return output_file, csv_file
+
+    def generate_illustrator_csv(self, needs_made, product_type):
+        """Generate Illustrator CSV for items that need to be made"""
+        if not needs_made:
+            self.logger.info("No items need made - skipping CSV generation")
+            return None
+
+        if product_type == 'RR':
+            # RR CSV format: Name, Center, Preview
+            csv_data = []
+            for item in needs_made:
+                csv_data.append({
+                    'Name': item['sanitized_name'],
+                    'Center': 'Star',  # All are star designs
+                    'Preview': 'no'
+                })
+
+            df = pd.DataFrame(csv_data)
+            csv_file = self.output_folder / 'illustrator_rr.csv'
+            df.to_csv(csv_file, index=False)
+            self.logger.info(f"RR Illustrator CSV generated: {csv_file}")
+            return csv_file
+        elif product_type == 'MS':
+            # MS CSV format: Name, Center, Year, Preview
+            csv_data = []
+            for item in needs_made:
+                csv_data.append({
+                    'Name': item['sanitized_name'],
+                    'Center': 'Star',  # Default to star
+                    'Year': 'No',  # Default to no year
+                    'Preview': 'no'
+                })
+
+            df = pd.DataFrame(csv_data)
+            csv_file = self.output_folder / 'illustrator_ms.csv'
+            df.to_csv(csv_file, index=False)
+            self.logger.info(f"MS Illustrator CSV generated: {csv_file}")
+            return csv_file
+
+        return None
 
     def run(self, names_list, product_type='RR', center='Star'):
         """Main execution"""
@@ -225,7 +269,7 @@ class NameListChecker:
             results = self.process_names(names_list, product_type, center)
 
             # Generate report
-            output_file = self.generate_report(results)
+            output_file, csv_file = self.generate_report(results)
 
             # Print summary
             print(f"\n{'='*60}")
@@ -235,8 +279,11 @@ class NameListChecker:
             print(f"Needs Updated: {len(results['needs_updated'])}")
             print(f"Already Made: {len(results['already_made'])}")
             print(f"{'='*60}")
-            print(f"\nReport saved to:")
+            print(f"\nExcel Report saved to:")
             print(f"{output_file}")
+            if csv_file:
+                print(f"\nIllustrator CSV saved to:")
+                print(f"{csv_file}")
             print(f"{'='*60}\n")
 
             self.logger.info("Name check completed successfully")
@@ -250,23 +297,32 @@ def main():
     """Entry point"""
     # List of names to check
     names_list = """
-Galen
-Trisha
-Anna
-Erica
-Debra
-Sierra
-Lisa
-Jasmine
-Tiona
-Joseph
-Brook
-Byron
-Pheobe Star
-Mark Star
-Carol Star
-Linda Star
-John Star
+David
+Mason
+Blaine
+Isaiah
+Anthony
+Kyle
+Mark
+Paul
+Aiden
+Kolbie
+Richard
+Tyrone
+Everett
+Finn
+Kylee
+Malia
+Lida
+Marissa
+Rachel
+Lacey
+Lindsay
+Skylar
+Melanie
+Katelyn
+ChloeAnne
+Lucia
 """.strip().split('\n')
 
     # Create checker and run
