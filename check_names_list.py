@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 # check_names_list.py - Process a list of names and check file database
 import sys
+import argparse
 from datetime import datetime
 from pathlib import Path
 import pandas as pd
@@ -293,10 +294,86 @@ class NameListChecker:
             raise
 
 
+def read_names_from_csv(csv_path):
+    """
+    Read names from a CSV file.
+
+    CSV can be in two formats:
+    1. Simple list (one name per line, no header)
+    2. CSV with header (looks for 'Name' or 'name' column)
+
+    Returns: list of name strings
+    """
+    csv_file = Path(csv_path)
+
+    if not csv_file.exists():
+        raise FileNotFoundError(f"CSV file not found: {csv_path}")
+
+    # Try to read as CSV with pandas
+    try:
+        df = pd.read_csv(csv_file)
+
+        # Look for a 'Name' column (case insensitive)
+        name_col = None
+        for col in df.columns:
+            if col.lower() == 'name':
+                name_col = col
+                break
+
+        if name_col:
+            # Has a Name column
+            names = df[name_col].dropna().tolist()
+        else:
+            # No Name column - assume first column is names
+            names = df.iloc[:, 0].dropna().tolist()
+    except:
+        # If pandas fails, read as plain text (one name per line)
+        with open(csv_file, 'r') as f:
+            names = [line.strip() for line in f if line.strip()]
+
+    return names
+
+
 def main():
-    """Entry point"""
-    # List of names to check
-    names_list = """
+    """Entry point with command-line argument support"""
+    parser = argparse.ArgumentParser(
+        description='Check a list of names against the file database',
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog='''
+Examples:
+  # Use a CSV file
+  python check_names_list.py --csv my_names.csv
+
+  # Specify product type and center
+  python check_names_list.py --csv my_names.csv --type MS --center Flk
+
+  # Use the hardcoded list (default if no CSV provided)
+  python check_names_list.py
+
+CSV Format:
+  The CSV can be:
+  - Simple list (one name per line)
+  - CSV with "Name" column header
+  - CSV where first column contains names
+        '''
+    )
+
+    parser.add_argument('--csv', type=str, help='Path to CSV file with names')
+    parser.add_argument('--type', type=str, choices=['RR', 'MS'], default='RR',
+                       help='Product type: RR or MS (default: RR)')
+    parser.add_argument('--center', type=str, choices=['Star', 'Flk'], default='Star',
+                       help='Center design: Star or Flk (default: Star)')
+
+    args = parser.parse_args()
+
+    # Get names list
+    if args.csv:
+        # Read from CSV file
+        print(f"Reading names from: {args.csv}")
+        names_list = read_names_from_csv(args.csv)
+    else:
+        # Use hardcoded list (fallback for when I update it)
+        names_list = """
 David
 Mason
 Blaine
@@ -327,7 +404,7 @@ Lucia
 
     # Create checker and run
     checker = NameListChecker()
-    checker.run(names_list, product_type='RR', center='Star')
+    checker.run(names_list, product_type=args.type, center=args.center)
 
 
 if __name__ == "__main__":
