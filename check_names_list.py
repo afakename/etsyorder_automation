@@ -255,6 +255,95 @@ class NameListChecker:
 
         return None
 
+    def run_with_metadata(self, names_with_info, product_type):
+        """
+        Process names with metadata from Illustrator CSV format.
+
+        Args:
+            names_with_info: List of dicts with 'name', 'center', optionally 'year'
+            product_type: 'RR' or 'MS'
+        """
+        try:
+            print(f"\n{'='*60}")
+            print(f"Name List Checker (Illustrator Format)")
+            print(f"{'='*60}")
+            print(f"Processing {len(names_with_info)} names...")
+            print(f"Product Type: {product_type}")
+            print(f"{'='*60}\n")
+
+            results = {
+                'needs_made': [],
+                'needs_updated': [],
+                'already_made': []
+            }
+
+            for item in names_with_info:
+                name = item['name']
+                center = item.get('center', 'Star')
+                year = item.get('year')
+
+                # Sanitize name
+                sanitized_name = self.filename_generator.sanitize_name(name)
+
+                # Generate filename based on metadata
+                if product_type == 'MS':
+                    if year:
+                        filename = f"{sanitized_name} MS {center} {year}"
+                    else:
+                        filename = f"{sanitized_name} MS {center}"
+                else:  # RR
+                    # RR is always Star, year implies star
+                    if year:
+                        filename = f"{sanitized_name} {year}"
+                    else:
+                        filename = f"{sanitized_name} Star"
+
+                self.logger.info(f"Checking: {name} -> {filename}")
+
+                # Check file status
+                status, file_path, update_details = self.check_file_status(filename)
+
+                result_data = {
+                    'original_name': name,
+                    'sanitized_name': sanitized_name,
+                    'generated_filename': filename,
+                    'status': status,
+                    'file_path': str(file_path) if file_path else 'NOT FOUND',
+                    'update_details': update_details if update_details else ''
+                }
+
+                if status == 'make':
+                    results['needs_made'].append(result_data)
+                elif status == 'update':
+                    results['needs_updated'].append(result_data)
+                else:
+                    result_data['days_since_modified'] = self.get_days_since_modified(file_path)
+                    results['already_made'].append(result_data)
+
+            # Generate report
+            output_file, csv_file = self.generate_report(results, product_type)
+
+            # Print summary
+            print(f"\n{'='*60}")
+            print(f"RESULTS SUMMARY")
+            print(f"{'='*60}")
+            print(f"Needs Made: {len(results['needs_made'])}")
+            print(f"Needs Updated: {len(results['needs_updated'])}")
+            print(f"Already Made: {len(results['already_made'])}")
+            print(f"{'='*60}")
+            print(f"\nExcel Report saved to:")
+            print(f"{output_file}")
+            if csv_file:
+                print(f"\nIllustrator CSV saved to:")
+                print(f"{csv_file}")
+            print(f"{'='*60}\n")
+
+            self.logger.info("Name check completed successfully")
+
+        except Exception as e:
+            self.logger.error(f"Name check failed: {e}")
+            raise
+
     def run(self, names_list, product_type='RR', center='Star'):
         """Main execution"""
         try:
@@ -298,22 +387,79 @@ def read_names_from_csv(csv_path):
     """
     Read names from a CSV file.
 
-    CSV can be in two formats:
-    1. Simple list (one name per line, no header)
-    2. CSV with header (looks for 'Name' or 'name' column)
+    CSV can be in multiple formats:
+    1. Illustrator RR format: Name, Center, Preview
+    2. Illustrator MS format: Name, Center, Year, Preview
+    3. Simple list (one name per line, no header)
+    4. CSV with 'Name' column header
 
-    Returns: list of name strings
+    Returns: (names_list, detected_type, detected_center_info)
+        - names_list: list of name strings or dicts with metadata
+        - detected_type: 'RR', 'MS', or None
+        - detected_center_info: dict with center/year info per name or None
     """
     csv_file = Path(csv_path)
 
     if not csv_file.exists():
         raise FileNotFoundError(f"CSV file not found: {csv_path}")
 
-    # Try to read as CSV with pandas
     try:
         df = pd.read_csv(csv_file)
 
-        # Look for a 'Name' column (case insensitive)
+        # Check for Illustrator format
+        columns_lower = [col.lower() for col in df.columns]
+
+        has_name = 'name' in columns_lower
+        has_center = 'center' in columns_lower
+        has_year = 'year' in columns_lower
+        has_preview = 'preview' in columns_lower
+
+        if has_name and has_center:
+            # This is Illustrator format!
+            name_col = df.columns[columns_lower.index('name')]
+            center_col = df.columns[columns_lower.index('center')]
+
+            if has_year:
+                # MS format (Name, Center, Year, Preview)
+                year_col = df.columns[columns_lower.index('year')]
+                detected_type = 'MS'
+
+                names_with_info = []
+                for idx, row in df.iterrows():
+                    name = row[name_col]
+                    center = row[center_col]
+                    year = row[year_col]
+
+                    if pd.isna(name):
+                        continue
+
+                    names_with_info.append({
+                        'name': str(name).strip(),
+                        'center': str(center).strip() if not pd.isna(center) else 'Star',
+                        'year': str(year).strip() if not pd.isna(year) and str(year).strip().lower() not in ['no', 'none', ''] else None
+                    })
+
+                return names_with_info, detected_type, True
+            else:
+                # RR format (Name, Center, Preview)
+                detected_type = 'RR'
+
+                names_with_info = []
+                for idx, row in df.iterrows():
+                    name = row[name_col]
+                    center = row[center_col]
+
+                    if pd.isna(name):
+                        continue
+
+                    names_with_info.append({
+                        'name': str(name).strip(),
+                        'center': str(center).strip() if not pd.isna(center) else 'Star'
+                    })
+
+                return names_with_info, detected_type, True
+
+        # Not Illustrator format - look for Name column
         name_col = None
         for col in df.columns:
             if col.lower() == 'name':
@@ -321,17 +467,19 @@ def read_names_from_csv(csv_path):
                 break
 
         if name_col:
-            # Has a Name column
             names = df[name_col].dropna().tolist()
         else:
-            # No Name column - assume first column is names
+            # Assume first column is names
             names = df.iloc[:, 0].dropna().tolist()
+
+        return [str(n).strip() for n in names], None, False
+
     except:
-        # If pandas fails, read as plain text (one name per line)
+        # If pandas fails, read as plain text
         with open(csv_file, 'r') as f:
             names = [line.strip() for line in f if line.strip()]
 
-    return names
+        return names, None, False
 
 
 def main():
@@ -359,18 +507,24 @@ CSV Format:
     )
 
     parser.add_argument('--csv', type=str, help='Path to CSV file with names')
-    parser.add_argument('--type', type=str, choices=['RR', 'MS'], default='RR',
-                       help='Product type: RR or MS (default: RR)')
-    parser.add_argument('--center', type=str, choices=['Star', 'Flk'], default='Star',
-                       help='Center design: Star or Flk (default: Star)')
+    parser.add_argument('--type', type=str, choices=['RR', 'MS'], default=None,
+                       help='Product type: RR or MS (auto-detected from Illustrator CSV, defaults to RR)')
+    parser.add_argument('--center', type=str, choices=['Star', 'Flk'], default=None,
+                       help='Center design: Star or Flk (auto-detected from Illustrator CSV, defaults to Star). Note: RR is always Star.')
 
     args = parser.parse_args()
 
     # Get names list
+    detected_type = None
+    detected_info = False
+
     if args.csv:
         # Read from CSV file
         print(f"Reading names from: {args.csv}")
-        names_list = read_names_from_csv(args.csv)
+        names_list, detected_type, detected_info = read_names_from_csv(args.csv)
+
+        if detected_info:
+            print(f"✓ Detected Illustrator {detected_type} format")
     else:
         # Use hardcoded list (fallback for when I update it)
         names_list = """
@@ -401,10 +555,22 @@ Katelyn
 ChloeAnne
 Lucia
 """.strip().split('\n')
+        detected_type = None
+        detected_info = False
+
+    # Determine product type and center
+    product_type = args.type or detected_type or 'RR'
+    center = args.center or 'Star'
 
     # Create checker and run
     checker = NameListChecker()
-    checker.run(names_list, product_type=args.type, center=args.center)
+
+    if detected_info:
+        # Illustrator format - process with metadata
+        checker.run_with_metadata(names_list, product_type)
+    else:
+        # Simple list - process normally
+        checker.run(names_list, product_type=product_type, center=center)
 
 
 if __name__ == "__main__":
