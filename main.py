@@ -387,6 +387,8 @@ class EtsyAutomation:
                 
                 order_data = {
                     'order_status': order_status,
+                    'check_1': '',
+                    'check_2': '',
                     'order_id': order_id,
                     'customer_name': customer_name,
                     'sku': transaction.get('sku', ''),
@@ -546,6 +548,8 @@ class EtsyAutomation:
                 
                 preview_items.append({
                     'Status': item['order_status'],
+                    'Check 1': '',
+                    'Check 2': '',
                     'Order ID': item['order_id'],
                     'Customer': item['customer_name'],
                     'Name': item['personalization'],
@@ -566,8 +570,8 @@ class EtsyAutomation:
             else:
                 # Create empty dataframe with column headers
                 df_preview = pd.DataFrame(columns=[
-                    'Status', 'Order ID', 'Customer', 'Name', 'SKU', 
-                    'Production Location', 'File Path', 'Quantity', 
+                    'Status', 'Check 1', 'Check 2', 'Order ID', 'Customer', 'Name', 'SKU',
+                    'Production Location', 'File Path', 'Quantity',
                     'Generated Filename', 'Message'
                 ])
             
@@ -700,6 +704,8 @@ class EtsyAutomation:
                     days_since_modified = self.get_days_since_modified(item['file_path'])
                     made_data.append({
                         'Status': item['order_status'],
+                        'Check 1': '',
+                        'Check 2': '',
                         'Order ID': item['order_id'],
                         'Customer': item['customer_name'],
                         'Name': item['personalization'],
