@@ -557,14 +557,15 @@ class EtsyAPIConnector:
 
         open_orders = []
         for order in orders:
-            # Filter for orders that are NOT complete
+            # Filter for orders that are NOT complete or canceled
             # Status will be "Paid", "Processing", etc. for open orders
-            # and "Complete" or "Completed" for finished orders
+            # "Complete"/"Completed" for finished orders
+            # "Canceled" for canceled orders
             order_status = order.get('status', '').lower()
-            if order_status != 'complete' and order_status != 'completed':
+            if order_status not in ['complete', 'completed', 'canceled', 'cancelled']:
                 open_orders.append(order)
 
-        print(f"Filtered to {len(open_orders)} open orders (status != Complete)")
+        print(f"Filtered to {len(open_orders)} open orders (status != Complete/Canceled)")
         return open_orders
 
     def get_order_details(self, receipt_id):
