@@ -144,15 +144,16 @@ class EtsyAPIConnector:
                 # Suppress default server logs
                 pass
 
-        print("Opening Etsy authorization in your browser...")
         auth_url = self.get_auth_url()
-        print(f"If browser doesn't open, go to: {auth_url}")
-        webbrowser.open(auth_url)
-        
+
         try:
             with socketserver.TCPServer(("localhost", 8080), OAuthHandler) as httpd:
+                # Server is bound and ready — NOW open the browser
+                print("Opening Etsy authorization in your browser...")
+                print(f"If browser doesn't open, go to:\n{auth_url}\n")
+                webbrowser.open(auth_url)
                 print("Waiting for authorization... Complete the login in your browser.")
-                httpd.timeout = 30  # 30 second timeout
+                httpd.timeout = 120  # 2 minute timeout
                 httpd.handle_request()
                 return auth_code
         except Exception as e:
