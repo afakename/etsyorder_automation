@@ -4,6 +4,9 @@ import argparse
 import json
 from datetime import datetime
 from pathlib import Path
+from dotenv import load_dotenv
+load_dotenv()
+
 from config import Config
 from logger import setup_logger
 import pandas as pd
@@ -12,6 +15,15 @@ import pandas as pd
 from etsy_api_connector import EtsyAPIConnector
 from filename_generator import FilenameGenerator
 from file_database import FileDatabase
+
+# Shopify connector (lives in nested EtsyAuto1/ folder from Windows merge)
+try:
+    sys.path.insert(0, str(Path(__file__).parent / 'EtsyAuto1'))
+    from connectors.shopify import ShopifyConnector
+    from connectors import NormalizedOrder
+    _SHOPIFY_AVAILABLE = True
+except ImportError:
+    _SHOPIFY_AVAILABLE = False
 
 class EtsyAutomation:
     # SKU categories
@@ -56,7 +68,17 @@ class EtsyAutomation:
         self.etsy_client = EtsyAPIConnector()
         self.filename_generator = FilenameGenerator(self.logger)
         self.file_database = FileDatabase(self.logger)
-        
+
+        # Shopify connector (optional)
+        if _SHOPIFY_AVAILABLE:
+            self.shopify_client = ShopifyConnector()
+            if self.shopify_client.is_configured():
+                self.logger.info("Shopify connector configured")
+            else:
+                self.logger.warning("Shopify credentials missing — skipping Shopify")
+        else:
+            self.shopify_client = None
+
         # Load previous run data for status tracking
         self.previous_orders = self.load_previous_orders()
     
@@ -118,30 +140,39 @@ class EtsyAutomation:
     def run(self):
         """Main execution flow"""
         try:
-            # Get all orders based on mode
+            # Get all Etsy orders based on mode
             all_orders = self.get_all_orders()
-            
-            if not all_orders:
+
+            # Categorize Etsy orders
+            categorized = self.categorize_orders(all_orders) if all_orders else {
+                'workflow': [], 'peace_love_hope': [], 'other': []
+            }
+
+            # Process Etsy workflow orders (MS/RR)
+            workflow_results = self.process_workflow_orders(categorized['workflow'])
+
+            # Process Shopify workflow orders and merge
+            shopify_workflow = self.fetch_and_process_shopify_orders()
+            workflow_results['all_orders'].extend(shopify_workflow['all_orders'])
+            workflow_results['needs_made'].extend(shopify_workflow['needs_made'])
+            workflow_results['needs_updated'].extend(shopify_workflow['needs_updated'])
+            workflow_results['file_locations'].extend(shopify_workflow['file_locations'])
+
+            if not all_orders and not shopify_workflow['all_orders']:
                 self.logger.info("No orders found")
                 print("\nNo orders found.")
                 return
-            
-            # Categorize orders
-            categorized = self.categorize_orders(all_orders)
-            
-            # Process workflow orders (MS/RR)
-            workflow_results = self.process_workflow_orders(categorized['workflow'])
-            
-            # Process other order types
+
+            # Process other Etsy order types
             peace_love_hope_results = self.process_other_orders(categorized['peace_love_hope'])
             other_orders_results = self.process_other_orders(categorized['other'])
-            
+
             # Generate reports
             self.generate_reports(workflow_results, peace_love_hope_results, other_orders_results)
-            
-            # Save order IDs for next run
+
+            # Save order IDs for next run (Etsy only — Shopify uses order names)
             all_order_ids = set()
-            for order in all_orders:
+            for order in all_orders or []:
                 all_order_ids.add(str(order.get('receipt_id', '')))
             self.save_current_orders(all_order_ids)
             
@@ -332,6 +363,78 @@ class EtsyAutomation:
         """Determine if order is new or previously pulled"""
         return "New" if str(order_id) not in self.previous_orders else "Previously Pulled"
     
+    def fetch_and_process_shopify_orders(self):
+        """Fetch Shopify workflow orders and run them through the same file-check pipeline."""
+        empty = {'all_orders': [], 'needs_made': [], 'needs_updated': [], 'file_locations': []}
+
+        if not self.shopify_client or not self.shopify_client.is_configured():
+            return empty
+
+        days = self.days_back or 90
+        shopify_orders = self.shopify_client.get_recent_orders(days_back=days)
+        self.logger.info(f"Shopify: {len(shopify_orders)} workflow orders fetched")
+
+        all_orders, needs_made, needs_updated, file_locations = [], [], [], []
+
+        for order in shopify_orders:
+            order_status = self.get_order_status(str(order.receipt_id))
+            message = order.message_from_buyer or ''
+
+            for item in order.items:
+                filename = self.filename_generator.generate_filename_from_item(item)
+                if not filename:
+                    continue
+
+                status, file_path, update_details = self.check_file_status(filename)
+
+                # Preview detection from Shopify item variations
+                preview = '0'
+                preview_requested = False
+                for key, value in item.variations.items():
+                    if key and value:
+                        if 'preview' in key.lower() or 'proof' in key.lower():
+                            if 'yes' in value.lower():
+                                preview = '1'
+                                preview_requested = True
+                                break
+
+                center = self.extract_center(filename, item.variations)
+                year = self.extract_year(filename)
+
+                order_data = {
+                    'source': 'Shopify',
+                    'order_status': order_status,
+                    'check_1': '',
+                    'check_2': '',
+                    'order_id': order.receipt_id,
+                    'customer_name': order.customer_name,
+                    'sku': item.sku,
+                    'file_status': status,
+                    'file_path': str(file_path) if file_path else 'NOT FOUND',
+                    'update_details': update_details or '',
+                    'quantity': item.quantity,
+                    'price': f"${item.price_usd:.2f}",
+                    'personalization': item.variations.get('Personalization', ''),
+                    'center': center,
+                    'year': year if year else 'No',
+                    'preview': preview,
+                    'preview_requested': preview_requested,
+                    'message': message[:100],
+                    'generated_filename': filename,
+                }
+
+                all_orders.append(order_data)
+                if status == 'make':
+                    needs_made.append(order_data)
+                elif status == 'update':
+                    needs_updated.append(order_data)
+                else:
+                    file_locations.append(order_data)
+
+        self.logger.info(f"Shopify workflow: {len(needs_made)} make, {len(needs_updated)} update, {len(file_locations)} already made")
+        return {'all_orders': all_orders, 'needs_made': needs_made,
+                'needs_updated': needs_updated, 'file_locations': file_locations}
+
     def process_workflow_orders(self, orders):
         """Process workflow orders (MS/RR) with file status checking"""
         all_orders = []
@@ -386,6 +489,7 @@ class EtsyAutomation:
                 year = self.extract_year(filename)
                 
                 order_data = {
+                    'source': 'Etsy',
                     'order_status': order_status,
                     'check_1': '',
                     'check_2': '',
@@ -598,6 +702,7 @@ class EtsyAutomation:
                 ms_make_data = []
                 for item in ms_make:
                     ms_make_data.append({
+                        'Source': item.get('source', 'Etsy'),
                         'Status': item['order_status'],
                         'Completed': '',
                         'Name': item['personalization'],
@@ -624,6 +729,7 @@ class EtsyAutomation:
                 ms_update_data = []
                 for item in ms_update:
                     ms_update_data.append({
+                        'Source': item.get('source', 'Etsy'),
                         'Status': item['order_status'],
                         'Completed': '',
                         'Name': item['personalization'],
@@ -651,6 +757,7 @@ class EtsyAutomation:
                 rr_make_data = []
                 for item in rr_make:
                     rr_make_data.append({
+                        'Source': item.get('source', 'Etsy'),
                         'Status': item['order_status'],
                         'Completed': '',
                         'Name': item['personalization'],
@@ -676,6 +783,7 @@ class EtsyAutomation:
                 rr_update_data = []
                 for item in rr_update:
                     rr_update_data.append({
+                        'Source': item.get('source', 'Etsy'),
                         'Status': item['order_status'],
                         'Completed': '',
                         'Name': item['personalization'],
@@ -703,6 +811,7 @@ class EtsyAutomation:
                 for item in workflow_results['file_locations']:
                     days_since_modified = self.get_days_since_modified(item['file_path'])
                     made_data.append({
+                        'Source': item.get('source', 'Etsy'),
                         'Status': item['order_status'],
                         'Check 1': '',
                         'Check 2': '',

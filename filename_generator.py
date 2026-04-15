@@ -22,6 +22,20 @@ class FilenameGenerator:
         """Get the current year dynamically"""
         return str(datetime.now().year)
     
+    def generate_filename_from_item(self, item):
+        """Generate filename from a NormalizedItem (Shopify or normalized Etsy)."""
+        sku = item.sku
+        if sku not in self.sku_mapping:
+            self.logger.warning(f"Unknown SKU: {sku}")
+            return None
+        variations = item.variations  # already a clean dict
+        name = variations.get('Personalization', 'Unknown')
+        product_info = self.sku_mapping[sku]
+        if product_info["type"] == "MS":
+            return self.generate_ms_filename(name, variations)
+        else:
+            return self.generate_regular_filename(name, variations)
+
     def generate_filename(self, transaction):
         """Generate filename from transaction data"""
         sku = transaction.get('sku', '')

@@ -53,6 +53,10 @@ class Config:
         else:
             return Path.home() / "Documents" / "EtsyAutomation" / "Logs"
     
+    # Shopify credentials
+    SHOPIFY_DOMAIN = os.getenv("SHOPIFY_DOMAIN", "")
+    SHOPIFY_ACCESS_TOKEN = os.getenv("SHOPIFY_ACCESS_TOKEN", "")
+
     # Processing settings
     DAYS_BACK_DEFAULT = 7
     MAX_ORDERS_PROCESS = 100
