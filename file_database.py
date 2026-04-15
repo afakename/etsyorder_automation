@@ -14,36 +14,50 @@ class FileDatabase:
         self.scan_files()
     
     def scan_files(self):
-        """Scan all year directories for SVG files"""
+        """Scan all year directories for SVG files - automatically detects year folders"""
         if not self.database_path.exists():
             self.logger.error(f"Database path does not exist: {self.database_path}")
             return
-        
+
         self.logger.info(f"Scanning files in: {self.database_path}")
         file_count = 0
-        
-        # Scan each year directory plus the new Snowflake SVGs folder
-        directories = [
-            "2021 Snowflakes", "2022 Snowflakes", "2023 Snowflakes", 
-            "2024 Snowflakes", "2025 Snowflakes", "Snowflake SVGs"
-        ]
-        
+
+        # Automatically find all year folders (YYYY Snowflakes pattern)
+        # Plus any other special folders like "Snowflake SVGs"
+        directories = []
+
+        # Scan for year-based folders (e.g., "2021 Snowflakes", "2026 Snowflakes")
+        for item in self.database_path.iterdir():
+            if item.is_dir():
+                dir_name = item.name
+                # Match pattern: starts with 4 digits (year) and contains "Snowflake"
+                if re.match(r'^\d{4}\s+Snowflake', dir_name):
+                    directories.append(dir_name)
+                # Also include special folders
+                elif dir_name in ["Snowflake SVGs", "Archive", "Templates"]:
+                    directories.append(dir_name)
+
+        # Sort year folders chronologically (newest first)
+        directories.sort(reverse=True)
+
+        self.logger.info(f"Found {len(directories)} directories to scan: {', '.join(directories)}")
+
         for dir_name in directories:
             dir_path = self.database_path / dir_name
             if dir_path.exists():
                 self.logger.info(f"Scanning {dir_name}...")
                 dir_count = 0
-                
+
                 for file_path in dir_path.rglob("*.svg"):
                     filename = file_path.stem
                     self.file_index[filename.lower()] = file_path
                     dir_count += 1
                     file_count += 1
-                
+
                 self.logger.info(f"Found {dir_count} files in {dir_name}")
             else:
                 self.logger.warning(f"Directory not found: {dir_path}")
-        
+
         self.logger.info(f"Total indexed files: {file_count}")
     
     def find_file(self, target_filename):
