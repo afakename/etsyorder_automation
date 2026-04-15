@@ -40,8 +40,7 @@ class Config:
         else:
             return Path.home() / "Snowflakes Database"
     
-    @classmethod 
-    @classmethod 
+    @classmethod
     def get_output_path(cls):
         """Get platform-appropriate output directory"""
         if platform.system() == "Darwin":  # macOS
@@ -57,3 +56,39 @@ class Config:
     # Processing settings
     DAYS_BACK_DEFAULT = 7
     MAX_ORDERS_PROCESS = 100
+
+    # Shopify credentials (set via env vars)
+    SHOPIFY_DOMAIN = os.getenv("SHOPIFY_DOMAIN", "")         # e.g. mystore.myshopify.com
+    SHOPIFY_ACCESS_TOKEN = os.getenv("SHOPIFY_ACCESS_TOKEN", "")
+
+    # Dashboard / Flask settings
+    FLASK_SECRET_KEY = os.getenv("FLASK_SECRET_KEY", "dev-secret-change-in-production")
+    DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///dashboard.db")
+    POLL_INTERVAL_MINUTES = int(os.getenv("POLL_INTERVAL_MINUTES", "30"))
+    RESCAN_INTERVAL_MINUTES = int(os.getenv("RESCAN_INTERVAL_MINUTES", "60"))
+
+    # Docker/NAS override: set SNOWFLAKE_DB_PATH env var to bypass platform detection
+    SNOWFLAKE_DB_PATH_OVERRIDE = os.getenv("SNOWFLAKE_DB_PATH", "")
+
+    @classmethod
+    def get_database_path_resolved(cls):
+        """Get database path, respecting Docker env var override"""
+        if cls.SNOWFLAKE_DB_PATH_OVERRIDE:
+            return Path(cls.SNOWFLAKE_DB_PATH_OVERRIDE)
+        return cls.get_database_path()
+
+    # STL file locations (mirror structure of SVG database)
+    @classmethod
+    def get_stl_database_path(cls):
+        """Get the STL/3MF files database path"""
+        stl_override = os.getenv("STL_DB_PATH", "")
+        if stl_override:
+            return Path(stl_override)
+        # Default: sibling folder to SVG database
+        svg_path = cls.get_database_path()
+        return svg_path.parent / "STL_Database"
+
+    # PNG cache directory for generated preview images
+    @classmethod
+    def get_png_cache_path(cls):
+        return Path(__file__).parent / "cache" / "png"

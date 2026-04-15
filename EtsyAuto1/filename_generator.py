@@ -17,26 +17,40 @@ class FilenameGenerator:
         }
     
     def generate_filename(self, transaction):
-        """Generate filename from transaction data"""
+        """Generate filename from raw Etsy transaction dict (legacy path)."""
         sku = transaction.get('sku', '')
-        
+
         if sku not in self.sku_mapping:
             self.logger.warning(f"Unknown SKU: {sku}")
             return None
-        
-        # Extract variation data
+
         variations = self.extract_variations(transaction.get('variations', []))
         name = variations.get('Personalization', 'Unknown')
-        
         product_info = self.sku_mapping[sku]
-        
+
         if product_info["type"] == "MS":
             return self.generate_ms_filename(name, variations)
         else:
             return self.generate_regular_filename(name, variations)
-    
+
+    def generate_filename_from_item(self, item):
+        """Generate filename from a NormalizedItem (Etsy or Shopify)."""
+        sku = item.sku
+        if sku not in self.sku_mapping:
+            self.logger.warning(f"Unknown SKU: {sku}")
+            return None
+
+        variations = item.variations  # already a clean dict
+        name = variations.get('Personalization', 'Unknown')
+        product_info = self.sku_mapping[sku]
+
+        if product_info["type"] == "MS":
+            return self.generate_ms_filename(name, variations)
+        else:
+            return self.generate_regular_filename(name, variations)
+
     def extract_variations(self, variations_list):
-        """Extract variation data into a clean dict"""
+        """Extract variation data into a clean dict (legacy Etsy list format)."""
         variations = {}
         for var in variations_list:
             formatted_name = var.get('formatted_name', '')
@@ -66,14 +80,22 @@ class FilenameGenerator:
     
     def generate_regular_filename(self, name, variations):
         """Generate regular ornament filename: {Name} {Year or Star}"""
-        year_or_star_raw = variations.get('Current Year or Star Design', 'Star')
-        
-        # Normalize the year/star value
-        if 'star' in year_or_star_raw.lower():
+        # Support both Etsy key and Shopify/GloboProduct key
+        year_or_star_raw = (
+            variations.get('Current Year or Star Design')
+            or variations.get('Choose the Center Piece')
+            or 'Star'
+        )
+
+        val = year_or_star_raw.lower()
+        if 'star' in val or 'let the design' in val:
             year_or_star = 'Star'
+        elif 'current year' in val:
+            import datetime
+            year_or_star = str(datetime.date.today().year)
         else:
             year_or_star = year_or_star_raw
-        
+
         filename = f"{name} {year_or_star}"
         self.logger.info(f"Generated regular filename: {filename}")
         return filename
@@ -81,10 +103,12 @@ class FilenameGenerator:
     def normalize_design(self, design_raw):
         """Normalize design variations to standard format"""
         design_lower = design_raw.lower()
-        
+
         if 'star' in design_lower:
             return 'Star'
         elif any(term in design_lower for term in ['flake', 'flk']):
             return 'Flk'
+        elif 'let the design' in design_lower:
+            return 'Star'  # Shopify RR default
         else:
             return design_raw
