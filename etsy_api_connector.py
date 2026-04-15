@@ -224,9 +224,9 @@ class EtsyAPIConnector:
             
         headers = {
             "Authorization": f"Bearer {self.access_token}",
-            "x-api-key": CLIENT_ID
+            "x-api-key": f"{CLIENT_ID}:{CLIENT_SECRET}"
         }
-        
+
         # Get user info first
         user_url = "https://api.etsy.com/v3/application/users/me"
         response = requests.get(user_url, headers=headers)
@@ -298,9 +298,9 @@ class EtsyAPIConnector:
             
         headers = {
             "Authorization": f"Bearer {self.access_token}",
-            "x-api-key": CLIENT_ID
+            "x-api-key": f"{CLIENT_ID}:{CLIENT_SECRET}"
         }
-        
+
         # Test with a simple shop info request
         url = f"https://api.etsy.com/v3/application/shops/{self.shop_id}"
         response = requests.get(url, headers=headers)
@@ -330,7 +330,7 @@ class EtsyAPIConnector:
 
         headers = {
             "Authorization": f"Bearer {self.access_token}",
-            "x-api-key": CLIENT_ID
+            "x-api-key": f"{CLIENT_ID}:{CLIENT_SECRET}"
         }
 
         # Calculate date range
@@ -575,7 +575,7 @@ class EtsyAPIConnector:
             
         headers = {
             "Authorization": f"Bearer {self.access_token}",
-            "x-api-key": CLIENT_ID
+            "x-api-key": f"{CLIENT_ID}:{CLIENT_SECRET}"
         }
         
         url = f"https://api.etsy.com/v3/application/shops/{self.shop_id}/receipts/{receipt_id}"
@@ -598,7 +598,7 @@ class EtsyAPIConnector:
             
         headers = {
             "Authorization": f"Bearer {self.access_token}",
-            "x-api-key": CLIENT_ID
+            "x-api-key": f"{CLIENT_ID}:{CLIENT_SECRET}"
         }
         
         url = f"https://api.etsy.com/v3/application/shops/{self.shop_id}/listings"

@@ -66,8 +66,19 @@ class NameListChecker:
 
             self.logger.info(f"FUZZY MATCH found: {best_match_filename} (highest version)")
 
-            # For "Name Star" variants, center is always 'star' and no year
-            # So if we find a match, it's the same design
+            # Check if the year/design matches
+            target_parts = self.file_database.extract_filename_parts(filename)
+            match_parts = self.file_database.extract_filename_parts(best_match_filename)
+
+            # If year or design is different, this needs to be made as a new variant
+            if target_parts['year'] != match_parts['year']:
+                self.logger.info(f"Year mismatch: target has '{target_parts['year']}', match has '{match_parts['year']}' - needs to be MADE")
+                return 'make', None, f"Found {best_match_filename} but different year"
+            elif target_parts['design'] != match_parts['design']:
+                self.logger.info(f"Design mismatch: target has '{target_parts['design']}', match has '{match_parts['design']}' - needs to be MADE")
+                return 'make', None, f"Found {best_match_filename} but different design"
+
+            # Year and design match, it's the same design
             self.logger.info(f"MATCH found (version {self.file_database.get_version_number(best_match_filename)}): {best_match_filename}")
             return 'exists', best_match, None
 
@@ -225,10 +236,14 @@ class NameListChecker:
             # RR CSV format: Name, Center, Preview
             csv_data = []
             for item in needs_made:
+                # Use preserved center/year/preview info if available
+                center = item.get('center', 'Star')
+                preview = item.get('preview', 'no')
+                # For RR with years, the center column should contain the year
                 csv_data.append({
                     'Name': item['sanitized_name'],
-                    'Center': 'Star',  # All are star designs
-                    'Preview': 'no'
+                    'Center': center,  # Use original center value (could be year or "Star")
+                    'Preview': preview  # Use original preview value
                 })
 
             df = pd.DataFrame(csv_data)
@@ -240,11 +255,15 @@ class NameListChecker:
             # MS CSV format: Name, Center, Year, Preview
             csv_data = []
             for item in needs_made:
+                # Use preserved center/year/preview info if available
+                center = item.get('center', 'Star')
+                year = item.get('year', 'No')
+                preview = item.get('preview', 'no')
                 csv_data.append({
                     'Name': item['sanitized_name'],
-                    'Center': 'Star',  # Default to star
-                    'Year': 'No',  # Default to no year
-                    'Preview': 'no'
+                    'Center': center,  # Use original center value
+                    'Year': year if year else 'No',  # Use original year value
+                    'Preview': preview  # Use original preview value
                 })
 
             df = pd.DataFrame(csv_data)
@@ -281,6 +300,7 @@ class NameListChecker:
                 name = item['name']
                 center = item.get('center', 'Star')
                 year = item.get('year')
+                preview = item.get('preview', 'no')
 
                 # Sanitize name
                 sanitized_name = self.filename_generator.sanitize_name(name)
@@ -293,8 +313,12 @@ class NameListChecker:
                         filename = f"{sanitized_name} MS {center}"
                 else:  # RR
                     # RR is always Star, year implies star
+                    # Check if center is actually a year (numeric like "2025")
                     if year:
                         filename = f"{sanitized_name} {year}"
+                    elif center and center.isdigit() and len(center) == 4:
+                        # Center column contains a year
+                        filename = f"{sanitized_name} {center}"
                     else:
                         filename = f"{sanitized_name} Star"
 
@@ -309,7 +333,10 @@ class NameListChecker:
                     'generated_filename': filename,
                     'status': status,
                     'file_path': str(file_path) if file_path else 'NOT FOUND',
-                    'update_details': update_details if update_details else ''
+                    'update_details': update_details if update_details else '',
+                    'center': center,  # Preserve original center/year info
+                    'year': year,
+                    'preview': preview  # Preserve original preview value
                 }
 
                 if status == 'make':
@@ -422,6 +449,7 @@ def read_names_from_csv(csv_path):
             if has_year:
                 # MS format (Name, Center, Year, Preview)
                 year_col = df.columns[columns_lower.index('year')]
+                preview_col = df.columns[columns_lower.index('preview')] if has_preview else None
                 detected_type = 'MS'
 
                 names_with_info = []
@@ -429,32 +457,51 @@ def read_names_from_csv(csv_path):
                     name = row[name_col]
                     center = row[center_col]
                     year = row[year_col]
+                    preview = row[preview_col] if preview_col else 'no'
 
                     if pd.isna(name):
                         continue
 
+                    # Normalize preview value: "yes", "preview", or variations → "Preview", otherwise "no"
+                    preview_normalized = 'no'
+                    if not pd.isna(preview):
+                        preview_str = str(preview).strip().lower()
+                        if preview_str in ['yes', 'preview', 'y']:
+                            preview_normalized = 'Preview'
+
                     names_with_info.append({
                         'name': str(name).strip(),
                         'center': str(center).strip() if not pd.isna(center) else 'Star',
-                        'year': str(year).strip() if not pd.isna(year) and str(year).strip().lower() not in ['no', 'none', ''] else None
+                        'year': str(year).strip() if not pd.isna(year) and str(year).strip().lower() not in ['no', 'none', ''] else None,
+                        'preview': preview_normalized
                     })
 
                 return names_with_info, detected_type, True
             else:
                 # RR format (Name, Center, Preview)
                 detected_type = 'RR'
+                preview_col = df.columns[columns_lower.index('preview')] if has_preview else None
 
                 names_with_info = []
                 for idx, row in df.iterrows():
                     name = row[name_col]
                     center = row[center_col]
+                    preview = row[preview_col] if preview_col else 'no'
 
                     if pd.isna(name):
                         continue
 
+                    # Normalize preview value: "yes", "preview", or variations → "Preview", otherwise "no"
+                    preview_normalized = 'no'
+                    if not pd.isna(preview):
+                        preview_str = str(preview).strip().lower()
+                        if preview_str in ['yes', 'preview', 'y']:
+                            preview_normalized = 'Preview'
+
                     names_with_info.append({
                         'name': str(name).strip(),
-                        'center': str(center).strip() if not pd.isna(center) else 'Star'
+                        'center': str(center).strip() if not pd.isna(center) else 'Star',
+                        'preview': preview_normalized
                     })
 
                 return names_with_info, detected_type, True
