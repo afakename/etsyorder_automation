@@ -39,13 +39,16 @@ class FilenameGenerator:
     def generate_filename(self, transaction):
         """Generate filename from transaction data"""
         sku = transaction.get('sku', '')
-        
+
         if sku not in self.sku_mapping:
             self.logger.warning(f"Unknown SKU: {sku}")
             return None
-        
-        # Extract variation data
-        variations = self.extract_variations(transaction.get('variations', []))
+
+        # Extract variation data - supports old variations format and new personalizations format
+        variations = self.extract_variations(
+            transaction.get('variations', []),
+            transaction.get('personalizations', [])
+        )
         name = variations.get('Personalization', 'Unknown')
         
         product_info = self.sku_mapping[sku]
@@ -55,13 +58,44 @@ class FilenameGenerator:
         else:
             return self.generate_regular_filename(name, variations)
     
-    def extract_variations(self, variations_list):
-        """Extract variation data into a clean dict"""
+    def extract_variations(self, variations_list, personalizations_list=None):
+        """Extract variation data into a clean dict.
+
+        Handles both the legacy Etsy format (personalization inside variations)
+        and the new Etsy API format (personalization in a separate personalizations field).
+        """
         variations = {}
+
+        # Old format: variations list contains all selection and text answers
         for var in variations_list:
             formatted_name = var.get('formatted_name', '')
             formatted_value = var.get('formatted_value', '')
-            variations[formatted_name] = formatted_value
+            if formatted_name:
+                variations[formatted_name] = formatted_value
+
+        # New Etsy API format: personalization answers are in a separate field
+        for p in (personalizations_list or []):
+            name = p.get('name', '')
+            value = p.get('value', '')
+            if name and value:
+                variations[name] = value
+                # Also map to the standard "Personalization" key used throughout
+                # the codebase so downstream code doesn't need to change.
+                if 'Personalization' not in variations and 'personalization' in name.lower():
+                    variations['Personalization'] = value
+
+        # Last-resort fallback: if still no Personalization key but at least one
+        # personalization answer exists, use the first one.  For these ornaments
+        # there is only ever a single custom-text question (the name), so this
+        # is safe regardless of what the seller labelled the question.
+        if 'Personalization' not in variations and personalizations_list:
+            first_val = (personalizations_list[0] or {}).get('value', '')
+            if first_val:
+                self.logger.info(
+                    f"Personalization key not found by name; using first personalization value: '{first_val}'"
+                )
+                variations['Personalization'] = first_val
+
         return variations
 
     def normalize_capitalization(self, name):

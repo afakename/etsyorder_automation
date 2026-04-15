@@ -460,8 +460,11 @@ class EtsyAutomation:
                 # Check file status with UPDATED logic
                 status, file_path, update_details = self.check_file_status(filename)
                 
-                # Extract variations first
-                variations = self.filename_generator.extract_variations(transaction.get('variations', []))
+                # Extract variations - supports old format and new personalizations format
+                variations = self.filename_generator.extract_variations(
+                    transaction.get('variations', []),
+                    transaction.get('personalizations', [])
+                )
                 
                 # Check for preview request in VARIATIONS (not message)
                 # Check multiple possible field names
@@ -539,8 +542,11 @@ class EtsyAutomation:
             order_status = self.get_order_status(order_id)
             
             for transaction in order.get('transactions', []):
-                # Extract variation details
-                variations = self.filename_generator.extract_variations(transaction.get('variations', []))
+                # Extract variation details - supports old format and new personalizations format
+                variations = self.filename_generator.extract_variations(
+                    transaction.get('variations', []),
+                    transaction.get('personalizations', [])
+                )
                 variation_text = ', '.join([f"{k}: {v}" for k, v in variations.items()])
                 
                 order_data = {

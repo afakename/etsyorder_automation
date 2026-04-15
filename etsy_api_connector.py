@@ -338,7 +338,6 @@ class EtsyAPIConnector:
         start_date = end_date - timedelta(days=days_back)
 
         url = f"https://api.etsy.com/v3/application/shops/{self.shop_id}/receipts"
-
         print(f"Fetching orders from {start_date.strftime('%Y-%m-%d')} to {end_date.strftime('%Y-%m-%d')}")
 
         all_orders = []
@@ -352,7 +351,8 @@ class EtsyAPIConnector:
                 'offset': offset,
                 'min_created': int(start_date.timestamp()),
                 'max_created': int(end_date.timestamp()),
-                'includes': 'transactions'
+                # Include both transactions and personalizations (new Etsy API format)
+                'includes': ['transactions', 'personalizations']
             }
 
             response = requests.get(url, headers=headers, params=params)
@@ -378,6 +378,15 @@ class EtsyAPIConnector:
                         else:
                             print(f"{key}: {value}")
                     print("="*60 + "\n")
+
+                    # DEBUG: Show personalization format on first transaction
+                    txns = sample.get('transactions', [])
+                    if txns:
+                        first_txn = txns[0]
+                        print("TRANSACTION PERSONALIZATION FORMAT:")
+                        print(f"  variations: {first_txn.get('variations', [])}")
+                        print(f"  personalizations: {first_txn.get('personalizations', '(field not present)')}")
+                        print("="*60 + "\n")
 
                 if not results:
                     # No more results
@@ -557,10 +566,9 @@ class EtsyAPIConnector:
 
         open_orders = []
         for order in orders:
-            # Filter for orders that are NOT complete or canceled
+            # Filter for orders that are NOT complete and NOT canceled
             # Status will be "Paid", "Processing", etc. for open orders
-            # "Complete"/"Completed" for finished orders
-            # "Canceled" for canceled orders
+            # "Complete"/"Completed" = done, "Canceled"/"Cancelled" = canceled
             order_status = order.get('status', '').lower()
             if order_status not in ['complete', 'completed', 'canceled', 'cancelled']:
                 open_orders.append(order)
@@ -580,7 +588,7 @@ class EtsyAPIConnector:
         
         url = f"https://api.etsy.com/v3/application/shops/{self.shop_id}/receipts/{receipt_id}"
         params = {
-            'includes': 'Transactions'
+            'includes': ['transactions', 'personalizations']
         }
         
         response = requests.get(url, headers=headers, params=params)
