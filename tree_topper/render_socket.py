@@ -13,7 +13,7 @@ def shaded(ax,mesh,color,light=(0.4,-0.5,0.8),alpha=1):
 def box(c,s):
     return trimesh.creation.box(extents=s,transform=trimesh.transformations.translation_matrix(c))
 
-def flake(R=114.5,t=10):
+def flake(R=114.5,t=20):
     # simple 6-arm flat flake, bottom arm is a 10x10 bar dropping into the socket
     parts=[]
     for k in range(6):
@@ -49,7 +49,7 @@ for g in geoms:
     xs,ys=g.exterior.xy; ax.fill(xs,ys,color="#4d8ad9")
     for h in g.interiors:
         x,y=h.xy; ax.fill(x,y,color="white")
-ax.set_aspect("equal"); ax.set_title("Cross-section: rod bore below, arm slot above"); ax.axis("off")
+ax.set_aspect("equal"); ax.set_title("Section: rod bore below, 20 mm arm slot above,\npin hole cuts across the slot wall (gap)"); ax.axis("off")
 plt.tight_layout(); plt.savefig("socket_views.png",dpi=90); plt.close()
 
 # assembly picture
